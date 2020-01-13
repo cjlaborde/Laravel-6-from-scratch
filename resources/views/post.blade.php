@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>My Blog Posts</h1>
-
-    <p>{{ $post }}</p>
+    <!-- $post is an object, so if you just use $post it will fail -->
+    <p>{{ $post->body }}</p>
 </body>
 </html>
