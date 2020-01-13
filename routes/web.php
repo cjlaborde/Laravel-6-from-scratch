@@ -11,19 +11,25 @@
 |
 */
 
-Route::get('/text', function () {
-    return 'Hello World';
-});
-Route::get('/json', function () {
-    return ['foo' => 'bar'];
-});
+// Route::get('/', function () {
+//     $name = request('name');
 
-Route::get('/welcome', function () {
-    return view('welcome');
+//     return $name;
+//     // http://laravel6.test/?name=john
+// });
+
+// Route::get('/', function () {
+//     $name = request('name');
+
+//     return view('test', [
+//         'name' => $name
+//     ]);
+// });
+
+
+//Inline
+Route::get('/', function () {
+    return view('test', [
+        'name' => request('name')
+    ]);
 });
-
-Route::get('test', function () {
-    return view('test');
-});
-
-
