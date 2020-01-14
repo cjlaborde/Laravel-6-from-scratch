@@ -30,3 +30,12 @@
 7. `php artisan migrate`
 8. `php artisan migrate:fresh` delete all data makes all tables from scratch
 
+### Generate Multiple Files in a Single Command
+1. `php artisan make:migration`
+2. `php artisan make:controller`
+3. `php artisan make:model Project`
+4. You can see all extra commands by using help with `php artisan help make:model`
+5.  -a, --all             Generate a migration, seeder, factory, and resource controller for the model
+6.  Get model with migration and controller without having to use the above multiple commands.
+7. `php artisan make:model Project -mc`
+

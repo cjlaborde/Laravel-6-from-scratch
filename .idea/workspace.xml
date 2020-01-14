@@ -2,16 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5da7db77-2f1d-45a2-97bf-db4a9a80bcdf" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/laravel6.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/laravel6.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ComposerSettings" synchronizationState="SYNCHRONIZE">
+  <component name="ComposerSettings" doNotAsk="true" synchronizationState="SYNCHRONIZE">
     <pharConfigPath>$PROJECT_DIR$/composer.json</pharConfigPath>
     <execution>
       <executable />
@@ -134,23 +135,23 @@
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
   <component name="RunManager">
     <configuration name="phpunit.xml" type="PHPUnitRunConfigurationType" factoryName="PHPUnit">
       <TestRunner scope="XML" />
       <method v="2" />
     </configuration>
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -162,7 +163,10 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1578962608535</updated>
-      <workItem from="1578962610058" duration="5065000" />
+      <workItem from="1578962610058" duration="5963000" />
+      <workItem from="1578971608127" duration="70000" />
+      <workItem from="1578971725071" duration="101000" />
+      <workItem from="1578971849037" duration="263000" />
     </task>
     <servers />
   </component>
@@ -174,10 +178,38 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
     </option>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="684" y="230" width="800" height="684" key="#Updates" timestamp="1578971800302">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="684" y="230" width="800" height="684" key="#Updates/0.27.1920.1053@0.27.1920.1053" timestamp="1578971800302" />
+    <state x="643" y="287" width="624" height="539" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1578971737171">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="643" y="287" width="624" height="539" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1578971737171" />
+    <state x="1238" y="436" width="322" height="241" key="DBNavigator.ConnectionAuthenticationDialog" timestamp="1578972021557">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="1238" y="436" width="322" height="241" key="DBNavigator.ConnectionAuthenticationDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1578972021557" />
+    <state x="937" y="211" width="924" height="691" key="DBNavigator.ProjectSettingsDialog" timestamp="1578972082836">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="937" y="211" width="924" height="691" key="DBNavigator.ProjectSettingsDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1578972082836" />
+    <state x="628" y="200" width="932" height="737" key="SettingsEditor" timestamp="1578971824845">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="628" y="200" width="932" height="737" key="SettingsEditor/0.27.1920.1053@0.27.1920.1053" timestamp="1578971824845" />
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1578972144381">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1578972144381" />
   </component>
 </project>
