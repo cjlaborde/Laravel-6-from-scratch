@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5da7db77-2f1d-45a2-97bf-db4a9a80bcdf" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/laravel6.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/laravel6.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
@@ -126,6 +124,11 @@
     </option>
   </component>
   <component name="ProjectId" id="1WMbrK7clMgZuWNJX8YnxzqT8F0" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
@@ -166,7 +169,7 @@
       <workItem from="1578962610058" duration="5963000" />
       <workItem from="1578971608127" duration="70000" />
       <workItem from="1578971725071" duration="101000" />
-      <workItem from="1578971849037" duration="263000" />
+      <workItem from="1578971849037" duration="5168000" />
     </task>
     <servers />
   </component>
@@ -207,9 +210,9 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="628" y="200" width="932" height="737" key="SettingsEditor/0.27.1920.1053@0.27.1920.1053" timestamp="1578971824845" />
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1578972144381">
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1578975941831">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1578972144381" />
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1578975941831" />
   </component>
 </project>

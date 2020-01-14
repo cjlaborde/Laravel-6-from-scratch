@@ -39,3 +39,36 @@
 6.  Get model with migration and controller without having to use the above multiple commands.
 7. `php artisan make:model Project -mc`
 
+### Business Logic
+1. `php artisan make:model Assigment -mc`
+2. `fill create_assigment_table` create boolean for completion
+3. tinker
+4. app(); check all paths in container
+5. $assigment = new App\Assigment;
+6. Add default false since a New task should not be added as completed $table->boolean('completed')->default(false);
+7. `php artisan migrate:rollback`
+8. `php artisan migrate`
+9. `php artisan tinker`
+10. $assigment = new App\Assigment;
+11. `$assigment->body = 'Finish school work';`
+12. `$assignment->save();` Save to the actual database
+13. Get everything from a table in tinker with `App\Assigment::all();`
+14. Get first on from a table in tinker with `App\Assigment::first();`
+15. Get all assigment where completed is false `App\Assignment::where('completed', false)->get();`
+16. all(); would not work above since we are constructing a full query
+17. Get all completed assignments `App\Assigment::where('completed', true)->get();`
+18. $assigment = App\Assigment::first();
+19. When you can make the code the way you would normally speak
+20. for example: An user can complete an assigment. So we create method `$assigment->complete();`
+21. Create the complete(); method in Assigment Model
+22. Update completed table to true `$this->completed = true;`
+23. Then save it. Then use tinker
+24. `$assigment = App\Assigment::first();`
+25. `$assigment->complete();`
+26. Reason you create function is because you save steps and is more readable
+
+
+
+
+
+
