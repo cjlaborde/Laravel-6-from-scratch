@@ -2,7 +2,7 @@
 <project version="4">
   <component name="DBNavigator.Project.DataEditorManager">
     <record-view-column-sorting-type value="BY_INDEX" />
-    <value-preview-text-wrapping value="true" />
+    <value-preview-text-wrapping value="false" />
     <value-preview-pinned value="false" />
   </component>
   <component name="DBNavigator.Project.DataExportManager">
@@ -23,18 +23,25 @@
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
     <show-object-properties value="true" />
-    <loaded-nodes />
+    <loaded-nodes>
+      <connection connection-id="a182d04c-9f34-408a-b5b9-eecfa5eb47e5">
+        <schema name="laravel6" object-types="table, index, dataset trigger, procedure, column, constraint, view, function" />
+      </connection>
+    </loaded-nodes>
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="910fc0aa-aa71-4c01-856e-b29b8f575256">
-      <console name="Connection" type="STANDARD" schema="" session="Main" />
+    <connection id="a182d04c-9f34-408a-b5b9-eecfa5eb47e5">
+      <console name="Laravel6" type="STANDARD" schema="laravel6" session="Main" />
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
     <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
-    <connection id="910fc0aa-aa71-4c01-856e-b29b8f575256" />
+    <connection id="a182d04c-9f34-408a-b5b9-eecfa5eb47e5" />
+  </component>
+  <component name="DBNavigator.Project.DatasetFilterManager">
+    <filter-actions connection-id="a182d04c-9f34-408a-b5b9-eecfa5eb47e5" dataset="laravel6.assigments" active-filter-id="" />
   </component>
   <component name="DBNavigator.Project.EditorStateManager">
     <last-used-providers />
@@ -59,21 +66,21 @@
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
-      <connection id="910fc0aa-aa71-4c01-856e-b29b8f575256" active="true">
+      <connection id="a182d04c-9f34-408a-b5b9-eecfa5eb47e5" active="true">
         <database>
-          <name value="Connection" />
+          <name value="Laravel6" />
           <description value="" />
           <database-type value="MYSQL" />
           <config-type value="BASIC" />
-          <database-version value="9999.0" />
+          <database-version value="5.5" />
           <driver-source value="BUILTIN" />
           <driver-library value="" />
           <driver value="" />
           <url-type value="DATABASE" />
           <host value="localhost" />
           <port value="3306" />
-          <database value="mysql" />
-          <type value="USER_PASSWORD" />
+          <database value="laravel6" />
+          <type value="USER" />
           <user value="root" />
           <deprecated-pwd value="" />
         </database>

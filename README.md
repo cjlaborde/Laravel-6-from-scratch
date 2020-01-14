@@ -67,6 +67,24 @@
 25. `$assigment->complete();`
 26. Reason you create function is because you save steps and is more readable
 
+### Layout Pages
+1. create layout.blade.php
+2.  Organize views, put all layout code in layout.blade.php and leave body content only in welcome.blade.php
+3. use extends('layout') in welcome.blade.php to use the layout.
+4. in layout.blade.php use     @yield ('content') to output welcome.blade.php view.
+5. on welcome.blade use 
+```
+@extends('layout')
+
+@section('content')
+    # put HTML code here
+@endsection
+
+```
+6. Link the <script></script> on layout.blade.php
+
+
+
 
 
 
