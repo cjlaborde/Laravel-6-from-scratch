@@ -20,3 +20,13 @@
 6. Model provide same API to perform sql queries and to stop business logic.
 7. You can even clean it more after refractoring by using technique you will learn later called route model bidding
 
+### Migrations 101
+1. `php artisan make:migration create_posts_table`
+2. go to create_posts_table.php and recreate table in laravel
+3. when you create new post the published_at is optional using `nullable();`
+4. `php artisan migrate`
+5. To push a new column to production app `php artisan make:migration add_title_to_posts_table`
+6. But we on Development mode so we do a `php artisan migrate:rollback`
+7. `php artisan migrate`
+8. `php artisan migrate:fresh` delete all data makes all tables from scratch
+
