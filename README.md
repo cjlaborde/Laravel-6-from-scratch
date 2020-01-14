@@ -10,3 +10,13 @@
 5. inspect variable with `dd($post);`
 6. output post from the database in view with `<p>{{ $post->body }}</p>`
 
+
+### Hello Eloquent
+1. If page doesn't appear abort(404);
+2. The "\" from \DB means we are accessing DB class from the global namespace group. Without it you would get error.
+3.  or use DB to import it.
+4. This is a query builder `DB::table('posts')->where('slug', $slug)->first();`
+5.  php artisan make:model Post -m
+6. Model provide same API to perform sql queries and to stop business logic.
+7. You can even clean it more after refractoring by using technique you will learn later called route model bidding
+
