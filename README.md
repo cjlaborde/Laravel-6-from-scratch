@@ -111,4 +111,113 @@
 9.  <link rel="stylesheet" href="{{ mix('/css/app.css') }}">
 10. <script src="/js/app.js"></script>
 
+### Render Dynamic Data
+1.  `php artisan make:model Article -m`
+2. go to `create_article_table` and add what you need 1) title 2) body 3) excerpt
+3. `php artisan migrate`
+4. use tinker to write article in articles table
+5. tinker
+6. $article = new App\Article;
+7. $article->title = 'Getting to know us';
+8.  $article->excerpt = ' Erat enium,Pellentesque viverra vulputate enim. Aliquam erat volutpat.';      
+9. 
+```
+ $article->body = 'Fusce odio. Etiam arcu dui, faucibus eget, placerat vel, 
+sodales eget, orci. Donec ornare neque ac sem. Mauris aliquet. Aliquam sem leo, 
+vulputate sed, convallis at, ultricies quis, justo. Donec nonummy magna quis risus.
+ Quisque eleifend. Phasellus tempor vehicula justo. Aliquam lacinia metus ut elit. 
+Suspendisse iaculis mauris nec lorem. Donec leo. Vivamus fermentum nibh in augue. 
+Praesent a lacus at urna congue rutrum. 
+Nulla enim eros, porttitor eu, tempus id, varius non, nibh.'; 
+```
+9. $article->save();
+10. Check database for article
+11. Render the data on the page.
+12. Routes file web.php and set the articles to a variable and return them in the page in JSON mode.
+```angular2
+Route::get('/about', function () {
+    $article = App\Article::all();
+    return $article;
+    return view('about');
+});
+```
+13. check page `http://laravel6.test/about`
+14. When you using all(); is fetching every record from the table.
+15. But when is a big Data with 100+ of articles is better to take the most recents by
+```php
+Route::get('/about', function () {
+    $article = App\Article::take(2)->get();
+    return $article;
+    return view('about');
+});
+```
+15. You can also paginate them
+```php
+Route::get('/about', function () {
+    $article = App\Article::paginate(2);
+    return $article;
+    return view('about');
+});
+```
+16. Show the latest articles first based on date created.
+```php
+Route::get('/about', function () {
+    $article = App\Article::latest()->get();
+    return $article;
+    return view('about');
+});
+```
+17. You can also order it by updated, published
+`$article = App\Article::latest('updated')->get();`, `$article = App\Article::latest('published`)->get();`
+18. Pass articles to our view
+```php
+# pass Data to our view
+Route::get('/about', function () {
+    $article = App\Article::latest()->get();
+
+    return view('about', [
+        'articles' => $article
+    ]);
+});
+```
+
+19. You can inline it to keep it cleaner.
+```php
+# pass Data to our view
+Route::get('/about', function () {
+    $article = App\Article::latest()->get();
+
+    return view('about', [
+        'articles' => $article
+    ]);
+});
+```
+20. You can inline it to keep it cleaner
+```php
+Route::get('/about', function () {
+    return view('about', [
+        'articles' => App\Article::latest()->get()
+    ]);
+});
+```
+
+21. visit about.blade.php
+```blade
+<ul class="style1">
+@foreach ($articles as $article)
+    <li>
+        <h3>{{ $article->title }}</h3>
+        <p><a href="#">{{ $article->excerpt }}</a></p>
+    </li>
+@endforeach
+</ul>
+```
+22. Be more specific and only display the latest 3 articles only.
+```php
+Route::get('/about', function () {
+    return view('about', [
+        'articles' => App\Article::take(3)->latest()->get()
+    ]);
+});
+```
 

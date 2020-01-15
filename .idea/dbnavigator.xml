@@ -23,11 +23,7 @@
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
     <show-object-properties value="true" />
-    <loaded-nodes>
-      <connection connection-id="a182d04c-9f34-408a-b5b9-eecfa5eb47e5">
-        <schema name="laravel6" object-types="table, index, dataset trigger, procedure, column, constraint, view, function" />
-      </connection>
-    </loaded-nodes>
+    <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="a182d04c-9f34-408a-b5b9-eecfa5eb47e5">
