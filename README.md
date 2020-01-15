@@ -221,3 +221,57 @@ Route::get('/about', function () {
 });
 ```
 
+### Render Dynamic Data: Part 2
+1. Change article nav item from career to articles
+2. Create a route but this time link to a controller instead 
+3.`Route::get('/articles/{article}', 'ArticleController@show');`
+4. Create `ArticlesController`
+5. `php artisan make:controller ArticlesController`
+6. Add method show on ArticlesController to create page
+7. test articleid in ArticlesController
+```php
+class ArticlesController extends Controller
+{
+    public function show($articleId)
+    {
+        dd($articleId);
+    }
+}
+```
+8. create the show method to find the article and show it
+```php
+    public function show($id)
+    {
+        $article = Article::find($id);
+
+        return view('articles.show', ['article' => $article]);
+    }
+```
+
+9. Create views/articles/show.blade.php and output article body content
+```
+    <div id="content">
+        <div class="title">
+            <h2>About Us: This is our History</h2>
+            <span class="byline">Mauris vulputate dolor sit amet nibh</span> </div>
+        <p><img src="/images/banner.jpg" alt="" class="image image-full" /> </p>
+        {{ $article->body }}
+    </div>
+```
+
+10. Create link for articles so that any article will activate select class in navbar
+`<li class="{{ Request::is('articles/*') ? 'current_page_item' : '' }}"><a href="/articles" accesskey="4" title="">Articles</a></li>`
+11. Link Sidebar to each individual article
+```php
+    @foreach ($articles as $article)
+        <li>
+            <h3>
+                <a href="/articles/{{ $article->id }}">{{ $article->title }}</a>
+            </h3>
+            <p>{{ $article->excerpt }}</p>
+        </li>
+    @endforeach
+```
+
+
+

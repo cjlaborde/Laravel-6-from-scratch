@@ -1,5 +1,12 @@
 @extends('layout')
 
 @section('content')
-    <h1>Hello World</h1>
+    <div id="wrapper">
+        <div id="page" class="container">
+            <div id="content">
+    <h1>Contact Us</h1>
+    laravel6@gmail.com
+            </div>
+        </div>
+    </div>
 @endsection
