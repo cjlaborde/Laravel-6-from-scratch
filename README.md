@@ -83,8 +83,12 @@
 ```
 6. Link the <script></script> on layout.blade.php
 
-
-
+### Integrate a Site Template
+1. Download template from `https://templated.co/simplework`
+2. Move theme files inside public folder
+3. use `<link href="{{ asset('css/default.css') }}" rel="stylesheet" >` to link to files in the public folder
+4. Create about.blade.php and create link for it.
+5. Only add Features to Home page
 
 
 
