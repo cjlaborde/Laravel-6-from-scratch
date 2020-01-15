@@ -63,6 +63,7 @@ Route::get('/about', function () {
     ]);
 });
 
+Route::get('/articles', 'ArticlesController@index');
 Route::get('/articles/{article}', 'ArticlesController@show');
 
 

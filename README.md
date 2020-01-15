@@ -272,6 +272,10 @@ class ArticlesController extends Controller
         </li>
     @endforeach
 ```
-
+### Homework Solutions
+1. Create Route
+2. Create controller function index
+3. Create views for all articles
+4. Add Navbar link to articles
 
 
