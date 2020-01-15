@@ -21,6 +21,7 @@ Released   : 20140225
 {{--    <link href="../public/fonts.css" rel="stylesheet" type="text/css" media="all" />--}}
     <link href="{{ asset('css/default.css') }}" rel="stylesheet" >
     <link href="{{ asset('css/fonts.css') }}" rel="stylesheet" >
+    <link rel="stylesheet" href="{{ mix('/css/app.css') }}">
 </head>
 <body>
 <div id="header-wrapper">
@@ -41,5 +42,7 @@ Released   : 20140225
 </div>
 @yield('header')
 @yield('content')
+@include('partials.footer')
+<script src="/js/app.js"></script>
 </body>
 </html>

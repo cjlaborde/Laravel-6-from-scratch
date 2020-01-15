@@ -99,4 +99,16 @@
 6. b) `{{ Request::is('about') ? 'current_page_item' : '' }}`
 7. b) `{{ Request::is('about*') ? 'current_page_item' : '' }}` or using wildcard so other subpages keep the about option selected
 
+### Asset Compilation with Laravel Mix and webpack
+1. Put same footer code on all pages. By moving it to layout only
+2. Remove Content and only leave featured on home page.
+3. public folder is for vanilla css and js
+4. resource folder is for preprocessed code like sass/vue.js etc. Files you put on resources are compiled into public directory
+5. Open webpack.mix.js file
+6. npm -v
+7. npm install
+8. import them in layout.blade.php
+9.  <link rel="stylesheet" href="{{ mix('/css/app.css') }}">
+10. <script src="/js/app.js"></script>
+
 
