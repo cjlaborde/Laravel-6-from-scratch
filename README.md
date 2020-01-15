@@ -90,7 +90,13 @@
 4. Create about.blade.php and create link for it.
 5. Only add Features to Home page
 
-
-
+### Set an Active Menu Link
+1. Create dynamic navbar links to add the selected current page from nav menu item
+2. {{ Request::path() === '/about' ? 'current_page_item' : '' }} path = what goes after the / example /about
+3. if we on about page only then should be echo out the CSS class otherwise don't echo the class
+4. There are 2 ways show here to activate the selected css class
+5. a) `{{ Request::path() === '/' ? 'current_page_item' : '' }}` and
+6. b) `{{ Request::is('about') ? 'current_page_item' : '' }}`
+7. b) `{{ Request::is('about*') ? 'current_page_item' : '' }}` or using wildcard so other subpages keep the about option selected
 
 
