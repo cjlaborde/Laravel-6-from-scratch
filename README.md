@@ -322,6 +322,76 @@ Route::post('/articles/{article}', 'ArticlesController@update');
 
 
 ```
-3.
+### Form Handling
+1. Create route for create `Route::get('/articles/create', 'ArticlesController@create');`
+2. If you visit `http://laravel6.test/articles/create` It will try to load show.blade.php
+3. return 'hello'; to test that if you don't put proper order of routes create will call show instead since show using wild card for ids
+4. Because routes order matters This the proper order
+```php
+Route::get('/articles/create', 'ArticlesController@create');
+Route::get('/articles/{article}', 'ArticlesController@show');
 
+```
+5. Create method create in ArticlesController.php
+```php
+    public function create()
+    {
+        return view('articles.create');
+    }
+```
+6. Create create.blade.php view and Create a form to create new articles
+7. `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.0/css/bulma.min.css">`
+8. Submit button should call `Route::post('/articles/', 'ArticlesController@store');`
+9. Connect the form to call the route.
+```blade
+    <form method="POST" action="/articles">
+        @csrf
+```
+10. You need to add @csrf or you will get 419 error message.
+11. @csrf adds `<input type="hidden" name="_token" value="ZPtUhthKSGeEVTVSVbgs9rvx0LTyiePcJsrMPoIl">` with a token this protects you by verifying you on the server from malicious users faking form requests.
+12. Persist the Article in ArticlesController with store() method.
+13. Test the request respond by using request()->all();
+```php
+    public function store()
+    {
+//        die('hello');
+        // perists the new article
+        // 1. Fetch request data
+        dump(request()->all());
+    }
+```
+14. Result of the dump after submitting form
+```php
+array:4 [▼
+  "_token" => "ZPtUhthKSGeEVTVSVbgs9rvx0LTyiePcJsrMPoIl"
+  "title" => "Pizza Food"
+  "excerpt" => "reerrefef erewded"
+  "body" => "ererfe eref erewrw frwfwf."
+]
+```
+15. Then you can assed the request data this way in the controller. This is the long way to show you how it works.
+```php
+    public function store()
+    {
+        // persist the new article
+        $article = new Article();
 
+        $article->title = request('title');
+        $article->excerpt = request('excerpt');
+        $article->body = request('body');
+        
+        // Persist the data
+        $article->save();
+        // Redirect data
+        return redirect('/articles');
+    }
+
+```
+16. Add CSS to only the contact page. Go to layout.blade.php and add `yield('head')`
+17.  then in create.blade.php
+```php
+    @section('head')
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.0/css/bulma.min.css">
+    @endsection
+```
+18. 
