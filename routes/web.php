@@ -65,5 +65,8 @@ Route::get('/about', function () {
 
 Route::get('/articles', 'ArticlesController@index');
 Route::get('/articles/{article}', 'ArticlesController@show');
+Route::get('/articles/{article}/edit', 'ArticlesController@edit');
+Route::post('/articles/{article}', 'ArticlesController@update');
+
 
 

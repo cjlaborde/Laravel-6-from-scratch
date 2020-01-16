@@ -278,4 +278,22 @@ class ArticlesController extends Controller
 3. Create views for all articles
 4. Add Navbar link to articles
 
+### The Seven Restful Controller Actions
+1. index() = Should render a lists of items
+2. show() = To show a specific item.
+3. create() = Show a view to create a new resource
+4. store() = Persist the create form
+5. edit() = Show a view to edit an existing resource
+6. update() = Persist the update from
+7. destroy() = Delete the resource
+
+1. `php artisan help make:controller`
+2. Will Create controller with all 7 Restful Controller Actions `php artisan make:controller ProjectsController -r`
+3. Automatically create controller with 7 Restful controller actions depending on the associated model and referencing that modal where ever is appropriate
+4. create routes for edit and update
+```php
+Route::get('/articles/{article}/edit', 'ArticlesController@edit');
+Route::post('/articles/{article}', 'ArticlesController@update');
+```
+
 
