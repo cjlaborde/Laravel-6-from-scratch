@@ -295,5 +295,33 @@ class ArticlesController extends Controller
 Route::get('/articles/{article}/edit', 'ArticlesController@edit');
 Route::post('/articles/{article}', 'ArticlesController@update');
 ```
+### Restful Routing
+1. REST (GET,POST,PUT,PATCH,DELETE)
+
+```php
+// GET /articles          # Index
+// GET /articles/:id      # Show
+// POST /articles         # Store
+
+// PUT /articles/:id      # Update
+// DELETE /articles/:id/  # Delete
+```
+2.
+```php
+// GET /videos          # Index
+// GET /videos/2        # Show
+// GET /videos/create   # Create
+// POST /videos         # Store
+// GET /videos/2/edit   # Edit
+// PUT /videos/2        # Update
+// Delete /videos/2     # Delete
+
+// GET /videos/subscribe
+
+// POST /videos/subscriptions => VideosSubscriptionsController@store
+
+
+```
+3.
 
 
