@@ -394,4 +394,51 @@ array:4 [▼
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.0/css/bulma.min.css">
     @endsection
 ```
-18. 
+
+### Forms That Submit PUT Requests
+1. `http://laravel6.test/articles/3/edit`
+2. create route `Route::get('/articles/{article}/edit', 'ArticlesController@edit');`
+3. Create controller for edit() in ArticlesController.php
+4. create view edit.blade.php
+5. show the values to edit on the view with
+```php
+ <input class="input" type="text"  name="title" id="title" value="{{ $article->title }}">
+<textarea class="textarea" name="body" id="excerpt">{{ $article->excerpt }}</textarea>
+<textarea class="textarea" name="body" id="body">{{ $article->body }}</textarea>
+
+```
+6. declare $article object in controller
+```php
+    public function edit($id)
+    {
+        $article = Article::find($id);
+
+//        return view('articles.edit', ['article' => $article]);
+        // compact does the same but shorter
+        return view('articles.edit', compact('article'));
+    }
+```
+7. Create route now for update `Route::put('/articles/{article}', 'ArticlesController@update');`
+8. Create the update() method in the Articles Controller
+```php
+    public function update($id)
+    {
+        $article = Article::find($id);
+
+        $article->title = request('title');
+        $article->excerpt = request('excerpt');
+        $article->body = request('body');
+
+        $article->save();
+
+        return redirect('/articles/' . $article->id);
+    }
+```
+9. In the edit.blade.php to make form update use PUT. Modern browsers still don't understand Put so you have set it up this way. So that Laravel understand you submitting a Put Request instead of a POST Request.
+```blade
+    <form method="POST" action="/articles/{{ $article->id }}">
+        @csrf
+        @method('PUT')
+```
+
+10. 
