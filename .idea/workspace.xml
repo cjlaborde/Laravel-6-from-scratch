@@ -4,8 +4,8 @@
     <list default="true" id="5da7db77-2f1d-45a2-97bf-db4a9a80bcdf" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Article.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Article.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/Http/Controllers/ArticlesController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/ArticlesController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/articles/create.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/articles/create.blade.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,6 +138,7 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
+    <property name="php.override.implement.member.chooser.php.doc" value="NONE" />
     <property name="settings.editor.selected.configurable" value="editing.templates" />
   </component>
   <component name="RecentsManager">
@@ -181,7 +182,7 @@
       <workItem from="1578971849037" duration="5843000" />
       <workItem from="1579008202967" duration="20443000" />
       <workItem from="1579095520056" duration="26791000" />
-      <workItem from="1579184220613" duration="14715000" />
+      <workItem from="1579184220613" duration="19845000" />
     </task>
     <servers />
   </component>
@@ -210,6 +211,10 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="182" y="347" width="654" height="419" key="#com.intellij.fileTypes.FileTypeChooser/0.27.1920.1053@0.27.1920.1053" timestamp="1579031329831" />
+    <state x="328" y="223" width="409" height="664" key="#com.intellij.ide.util.MemberChooser" timestamp="1579237173651">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="328" y="223" width="409" height="664" key="#com.intellij.ide.util.MemberChooser/0.27.1920.1053@0.27.1920.1053" timestamp="1579237173651" />
     <state x="643" y="287" width="624" height="539" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1578971737171">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
@@ -234,9 +239,9 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="178" y="252" key="run.anything.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1579231362726" />
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1579212738832">
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1579236825673">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1579212738832" />
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1579236825673" />
   </component>
 </project>

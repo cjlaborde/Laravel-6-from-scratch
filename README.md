@@ -497,3 +497,82 @@ array:4 [▼
     </div>
 ```
 10. Do the same now add the validation in update($id) method from ArticlesController.php
+
+### Leverage Route Model Binding
+1. use `$article = Article::findOrFail($id);` instead of `$article = Article::find($id);` that way you get 404 instead of error page.
+2. you can use `return $articles;` inside the method of ArticlesController to get the return of the data in JSON
+3.  You can make it simpler instead of using
+```php
+   public function show($id)
+   {
+       //  return 'hello'; to test that if you don't put proper order of routes create will call show instead since show using wild card for ids
+       $article = Article::findOrFail($id);
+
+      return view('articles.show', ['article' => $article]);
+   }
+```
+4. Use this refactored code instead.
+```php
+    public function show(Article $article)
+    {
+        return view('articles.show', ['article' => $article]);
+    }
+```
+5. How Laravel knows which the id is? 
+6. Route::get('/articles/{article}', 'ArticlesController@show'); Laravel knows the id is from the router {article}
+7. Then when we request article `public function show(Article $article)` and the matching card for this variable is.
+8. So is the equivalent of doing Article::where('id', 1)->first();
+9. That result will be pass to show method, this happens behind the scenes automatically.
+10. But be careful because your wild card name is important
+11. So make sure wild card named same as the variable you use in the show method
+```php
+Route::get('/articles/{foobar}', 'ArticlesController@show');
+```
+```php
+    public function show(Article $foobar)
+    {
+        return view('articles.show', ['article' => $foobar]);
+    }
+
+```
+12. to make slugs work instead of an ID go to Article.php Model then use in PHPStorm option called `Override Method` `Alt` + `Insert` and Overwrite `getRouteKeyName`
+13. 
+```php
+class Article extends Model
+{
+    public function getRouteKeyName()
+    {
+        return 'slug'; // Article::where('slug', $article)->first();
+    }
+
+}
+```
+14. Do the same you did in show() method to edit() and update method
+```php
+    // Refactored edit method
+    public function edit(Article $article)
+    {
+        return view('articles.edit', compact('article'));
+    }
+
+```
+```php
+    public function update(Article $article)
+    {
+        request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+
+        $article->title = request('title');
+        $article->excerpt = request('excerpt');
+        $article->body = request('body');
+
+        $article->save();
+
+        return redirect('/articles/' . $article->id);
+    }
+```
+
+

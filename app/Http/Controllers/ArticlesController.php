@@ -20,19 +20,27 @@ class ArticlesController extends Controller
     {
         $articles = Article::latest()->paginate(3);
 
+        return $articles;
+
         return view('articles.index', ['articles' => $articles]);
     }
 
     // Show a single resource.
-    public function show($id)
-    {
-        //  return 'hello'; to test that if you don't put proper order of routes create will call show instead since show using wild card for ids
-        $article = Article::find($id);
+//    public function show($id)
+//    {
+//        //  return 'hello'; to test that if you don't put proper order of routes create will call show instead since show using wild card for ids
+//        $article = Article::findOrFail($id);
+//
+//        return view('articles.show', ['article' => $article]);
+//    }
 
+    // Refactored show method
+    public function show(Article $article)
+    {
         return view('articles.show', ['article' => $article]);
     }
 
-    // Show a view to create a new resource
+
     public function create()
     {
         return view('articles.create');
@@ -73,6 +81,7 @@ class ArticlesController extends Controller
     }
 
     // Show a view to edit an existing resource
+    /*
     public function edit($id)
     {
         $article = Article::find($id);
@@ -81,8 +90,16 @@ class ArticlesController extends Controller
         // return compact does the same as above but shorter
         return view('articles.edit', compact('article'));
     }
+    */
+
+    // Refactored edit method
+    public function edit(Article $article)
+    {
+        return view('articles.edit', compact('article'));
+    }
 
     // Persist the edited resource
+    /*
     public function update($id)
     {
         request()->validate([
@@ -92,6 +109,24 @@ class ArticlesController extends Controller
         ]);
 
         $article = Article::find($id);
+
+        $article->title = request('title');
+        $article->excerpt = request('excerpt');
+        $article->body = request('body');
+
+        $article->save();
+
+        return redirect('/articles/' . $article->id);
+    }
+    */
+
+    public function update(Article $article)
+    {
+        request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
 
         $article->title = request('title');
         $article->excerpt = request('excerpt');
