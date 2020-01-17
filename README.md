@@ -771,5 +771,59 @@ request()->validate([
         ]);
     }
 ```
-17. 
+### Consider Named Routes
+1. `Route::get('/articles/{article}', 'ArticlesController@show');`
+2. `Route::get('/articles/{article}', 'ArticlesController@show')->name('articles.show');`
+3. Now you can replace in views/articles/index.blade.html `<h2><a href="/articles/{{ $article->id }}">`
+4. With the named route `<a href="{{ route('articles.show', $article->id)}}">`
+5. Also you can just provide ``<a href="{{ route('articles.show', $article }}">` and laravel will know it's id automatically.
+6. In articles controller  use the named routes as well ArticlesController.php
+```php
+    public function update(Article $article)
+    {
+        $article->update($this->validateArticle());
+
+//        return redirect('/articles/' . $article->id);
+        return redirect(route('articles.show', $article));
+    }
+```
+7. We do this since if we ever change the actual route, it will be dynamic and you only need to make the change in the route since we will use an dynamic address instead
+8. we do same with `Route::get('/articles', 'ArticlesController@index')->name('articles.index');`
+9. ArticlesController.php
+```php
+    public function store()
+    {
+        Article::create($this->validateArticle());
+        // Redirect data
+//        return redirect('/articles');
+        return redirect(route('articles.index'));
+    }
+```
+10. Another option for named routes is to go to model Article.php and add method called path
+```php
+    public function path()
+    {
+        return route('articles.show', $this);
+    }
+```
+11. Use `tinker`
+12. `$article = App\Article::first();` declare article as the first article created.
+13. `$article->path()` and the result is the path of the first one `"http://localhost/articles/1"`
+14. Then you can replace on ArticlesController.php
+```php
+    public function update(Article $article)
+    {
+        $article->update($this->validateArticle());
+
+//        return redirect('/articles/' . $article->id);
+//        return redirect(route('articles.show', $article));
+        return redirect($article->path());
+    }
+```
+15. Replace in views/articles/index.blade.php the path again
+```php
+//{{--                      <a href="{{ route('articles.show', $article->id)}}">--}}
+//{{--                      <a href="{{ route('articles.show', $article )}}">--}}
+                            <a href="{{ $article->path() }}">
+```
 

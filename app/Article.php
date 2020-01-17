@@ -17,4 +17,9 @@ class Article extends Model
     // User::create(request->all()) // ['name' => 'newname', 'subscriber' => true];
     protected $guarded = [];
 
+    public function path()
+    {
+        return route('articles.show', $this);
+    }
+
 }
