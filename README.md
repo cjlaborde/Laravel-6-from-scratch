@@ -441,4 +441,59 @@ array:4 [▼
         @method('PUT')
 ```
 
-10. 
+### Form Validation Essentials
+1. Innocent till proven guilty you need to validate in store() method
+2. add some basic to store() method in ArticlesController
+```php
+        request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+```
+3. You can also add validate to the front end. `<input class="input" type="text"  name="title" id="title" required>`
+4. if any validation fails it will redirect, without validation it would give laravel error message instead.
+5. create helper message so that error message appear in the view
+```blade
+    <input class="input" type="text"  name="title" id="title">
+    <p class="help is-danger">{{ $errors->first('title') }}</p>
+```
+6. but would rather not have the element there unless there was error
+```blade
+    @if ($errors->has('title'))
+        <p class="help is-danger">{{ $errors->first('title') }}</p>
+    @endif
+```
+7. add more feedback by making input red as well
+`<input class="input {{ $errors->has('title') ? 'is-danger' : '' }}" type="text"  name="title" id="title">`
+8. You can also do it with @error which is simpler and easier to read.
+```blade
+    <div class="control">
+        <input class="input @error('title') is-danger @enderror" type="text"  name="title" id="title">
+        @error('title')
+            <p class="help is-danger">{{ $errors->first('title') }}</p>
+        @enderror
+    </div>
+```
+9. Keep last value on form that was there before form error appeared.
+```blade
+    <input
+        class="input @error('title') is-danger @enderror"
+        type="text"
+        name="title"
+        id="title"
+        value="{{ old('title') }}"
+    >
+
+    <div class="control">
+        <textarea
+            class="textarea @error('excerpt') is-danger @enderror"
+            name="excerpt"
+            id="excerpt"
+        >{{ old('excerpt') }}</textarea>
+        @error('excerpt')
+            <p class="help is-danger">{{ $errors->first('excerpt') }}</p>
+        @enderror
+    </div>
+```
+10. Do the same now add the validation in update($id) method from ArticlesController.php

@@ -53,6 +53,11 @@ class ArticlesController extends Controller
     public function store()
     {
         // validation
+        request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
 
         // There are more clean ways to write this code.
         $article = new Article();
@@ -80,6 +85,12 @@ class ArticlesController extends Controller
     // Persist the edited resource
     public function update($id)
     {
+        request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+
         $article = Article::find($id);
 
         $article->title = request('title');
