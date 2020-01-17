@@ -575,4 +575,201 @@ class Article extends Model
     }
 ```
 
+### EXTRA:  look stuff up by either the ID or the slug
+```php
+    class Article extends Model
+    {
+        /**
+         * Retrieve the model for a bound value.
+         *
+         * @param  mixed  $value
+         * @return \Illuminate\Database\Eloquent\Model|null
+         */
+        public function resolveRouteBinding($value)
+        {
+            return $this->where('id', $value)
+                ->orWhere('slug', $value)
+                ->first();
+        }
+    }
+```
+### Reduce Duplication
+1. Refractor the store() method in ArticlesController From:
+```php
+    public function store()
+    {
+        // validation
+        request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+
+        // There are more clean ways to write this code.
+        $article = new Article();
+
+        $article->title = request('title');
+        $article->excerpt = request('excerpt');
+        $article->body = request('body');
+
+        // Persist the data
+        $article->save();
+        // Redirect data
+        return redirect('/articles');
+    }
+
+```
+
+To
+
+```php
+    public function store()
+    {
+        // validation
+        request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+        
+        // Will Create it and assign it at the same time.
+        Article::create([
+            'title' => request('title'),
+            'excerpt' => request('excerpt'),
+            'body' => request('body')
+        ]);
+
+        // Persist the data
+        $article->save();
+        // Redirect data
+        return redirect('/articles');
+    }
+```
+2. It will fill since laravel protect you from mass assigment = Refer to situations when unexpected and undeclared parameter is pass from request and
+ultimately changes a record in your table
+3. To fix mass assigment use `protected $fillable = ['title', 'excerpt', 'body'];` in the Article.php modal.
+
+4. As long as you not using code as `User::create(request->all()) // ['name' => 'newname', 'subscriber' => true];` which can be dangerous
+5. Just use `protected $guarded = [];` instead to deactivate the protection inside the modal Article.php
+6. After validation is valid it will return the validated attributes from the function call.
+7. See the return of the validator
+```php
+    public function store()
+    {
+        // validation
+        $validatedAttributes = request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+
+        return $validatedAttributes;
+
+```
+```json
+    {
+        title: "validated Attributes",
+        excerpt: "validated Attributes",
+        body: "validated Attributes"
+    }
+```
+8. Which means I can replace this array inside create with variable with $validatedAttributes
+```php
+        // Will Create it and assign it at the same time.
+        Article::create([
+            'title' => request('title'),
+            'excerpt' => request('excerpt'),
+            'body' => request('body')
+        ]);
+```
+9. you can replace the array with `Article::create($validatedAttributes);`
+10. Or we can go Further and indent `Article::create($validatedAttributes);` the $validatedAttributes variable.
+```php
+    public function store()
+    {
+        Article::create(request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]));
+        // Redirect data
+        return redirect('/articles');
+    }
+```
+11. Do the Same with update() method in ArticlesController
+```php
+    public function update($id)
+    {
+        request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+
+        $article = Article::find($id);
+
+        $article->title = request('title');
+        $article->excerpt = request('excerpt');
+        $article->body = request('body');
+
+        $article->save();
+
+        return redirect('/articles/' . $article->id);
+    }
+```
+
+refractor code to 
+
+```php
+    public function update(Article $article)
+    {
+        $article->update(request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]));
+        
+        return redirect('/articles/' . $article->id);
+    }
+```
+12. This method of refactoring is great since it assign the attributes, persist them all in one go.
+
+13. Now both request for store() and update method are identical so you can refractor it.
+```php
+request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]));
+```
+14. so exact it to a method select it and Refractor this and Method
+15. turn this
+```php
+        $article->update(request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]));
+```
+16. Into this
+```php
+    public function store()
+    {
+        Article::create($this->validateArticle());
+        // Redirect data
+        return redirect('/articles');
+    }
+```
+17. now you only have to update validations in one place.
+```php
+    protected function validateArticle(): array
+    {
+        return request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+    }
+```
+17. 
 

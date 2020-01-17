@@ -16,11 +16,23 @@ class ArticlesController extends Controller
     */
 
     // Render a list of resources.
+    /*
     public function index()
     {
         $articles = Article::latest()->paginate(3);
 
-        return $articles;
+//        return $articles;
+
+        return view('articles.index', ['articles' => $articles]);
+    }
+    */
+
+    // Render a list of resources.
+    public function index(Article $article)
+    {
+        $articles = Article::latest()->paginate(3);
+
+//        return $articles;
 
         return view('articles.index', ['articles' => $articles]);
     }
@@ -58,6 +70,7 @@ class ArticlesController extends Controller
     }
     */
 
+    /*
     public function store()
     {
         // validation
@@ -76,6 +89,53 @@ class ArticlesController extends Controller
 
         // Persist the data
         $article->save();
+        // Redirect data
+        return redirect('/articles');
+    }
+    */
+
+    /*
+    public function store()
+    {
+        // validation
+        request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+
+        // Will Create it and assign it at the same time.
+        Article::create([
+            'title' => request('title'),
+            'excerpt' => request('excerpt'),
+            'body' => request('body')
+        ]);
+        // Redirect data
+        return redirect('/articles');
+    }
+    */
+
+/*
+    public function store()
+    {
+        // validation
+        $validatedAttributes = request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+
+//        return $validatedAttributes;
+        // Will Create it and assign it at the same time.
+        Article::create($validatedAttributes);
+        // Redirect data
+        return redirect('/articles');
+    }
+*/
+
+    public function store()
+    {
+        Article::create($this->validateArticle());
         // Redirect data
         return redirect('/articles');
     }
@@ -122,17 +182,7 @@ class ArticlesController extends Controller
 
     public function update(Article $article)
     {
-        request()->validate([
-            'title' => ['required', 'min:3', 'max:255'],
-            'excerpt' => 'required',
-            'body' => 'required'
-        ]);
-
-        $article->title = request('title');
-        $article->excerpt = request('excerpt');
-        $article->body = request('body');
-
-        $article->save();
+        $article->update($this->validateArticle());
 
         return redirect('/articles/' . $article->id);
     }
@@ -143,4 +193,17 @@ class ArticlesController extends Controller
 
     }
 
+    /**
+     * @return array
+     */
+    protected function validateArticle(): array
+    {
+        return request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required'
+        ]);
+    }
 }
+
+

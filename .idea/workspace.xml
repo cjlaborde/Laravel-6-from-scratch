@@ -183,6 +183,7 @@
       <workItem from="1579008202967" duration="20443000" />
       <workItem from="1579095520056" duration="26791000" />
       <workItem from="1579184220613" duration="19845000" />
+      <workItem from="1579281981932" duration="6261000" />
     </task>
     <servers />
   </component>
@@ -219,6 +220,10 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="643" y="287" width="624" height="539" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1578971737171" />
+    <state x="224" y="149" width="501" height="815" key="#com.jetbrains.php.refactoring.extractMethod.PhpExtractMethodDialog#method0" timestamp="1579287213584">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="224" y="149" width="501" height="815" key="#com.jetbrains.php.refactoring.extractMethod.PhpExtractMethodDialog#method0/0.27.1920.1053@0.27.1920.1053" timestamp="1579287213584" />
     <state x="1238" y="436" width="322" height="241" key="DBNavigator.ConnectionAuthenticationDialog" timestamp="1579015638769">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
@@ -231,6 +236,10 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="16" y="188" width="924" height="691" key="DBNavigator.ProjectSettingsDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1579015960796" />
+    <state x="329" y="490" width="379" height="133" key="ReplaceDuplicatesPrompt" timestamp="1579287226563">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="329" y="490" width="379" height="133" key="ReplaceDuplicatesPrompt/0.27.1920.1053@0.27.1920.1053" timestamp="1579287226563" />
     <state x="628" y="200" width="932" height="737" key="SettingsEditor" timestamp="1579148593086">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
@@ -239,9 +248,9 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="178" y="252" key="run.anything.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1579231362726" />
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1579236825673">
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1579287078291">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1579236825673" />
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1579287078291" />
   </component>
 </project>
