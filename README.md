@@ -878,3 +878,90 @@ request()->validate([
 22. When you dealing with polymorphism relationships `morphMany` `morphToMany`
 23. In the end you mostly going to use only around 4 only `hasOne`, `hasMany`, `BelongsTo` and `belongsToMany`
 
+### Understanding Foreign Keys and Database Factories
+1. We decided that article belongs to an user.
+2. And user has many articles.
+3. In order to make that work we need some association between article and user.
+4. Go to `create_articles_table.php`
+5. Make sure that you are using bigIncrements in both articles and user tables. and add `$table->unsignedBigInteger('user_id');`
+```php
+    $table->bigIncrements('id');
+    $table->unsignedBigInteger('user_id');
+```
+6. `php artisan migrate:fresh`
+7. All data gets deleted so lets create factory to quickly regenerate data.
+8. go to UserFactory.php Faker library allows us to generate any data
+9. To load data from factory use `tinker`
+10. `factory(App\User::class)->create();` will generate a user each time you use it.
+11. `factory(App\User::class, 5)->create();`
+12. If you want article ` factory(App\Article::class, 5)->create();` will not work since you have not created it yet.
+13. `php artisan help make:factory`
+14. `php artisan make:factory ArticleFactory` but doesn't know what Model we working with.
+15. `php artisan make:factory ArticleFactory -m "Article"` so it will reference the Article
+16. Check the Article table to see what data we want generated, you don't need to generate id or timestamps since they get generated automatically.
+```php
+$factory->define(Article::class, function (Faker $faker) {
+    return [
+        # Will generate a new user that will own this article.
+        'user_id' => factory(\App\User::class),
+        'title' => $faker->sentence,
+        'excerpt' => $faker->sentence,
+        'body' => $faker->paragraph
+    ];
+});
+```
+17. Now you can run `factory(App\Article::class, 5)->create` and create 5 articles
+18. With each article a new user was created as well.
+19. If you want to have your own attribute instead of using Faker random do this will create 5 articles with same title.
+20. `factory(App\Article::class, 5)->create(['title' => 'Override the title']);`
+21. But a Better way to do it is. Create Article and associate it with user.
+`factory(App\Article::class, 5)->create(['user_id' => 1 ]);`
+22. Problem is that if you delete user 1 all those articles end up without a user.
+23. Foreign key constrain this will delete all Articles when the user gets deleted.
+```php
+    $table->foreign('user_id')
+        ->references('id')
+        ->on('users')
+        ->onDelete('cascade');
+});
+```
+24. `php artisan migrate:fresh`
+
+25. So test it again create Articles from same user and delete user to see cascasde into action.
+26. Create 2 new users `factory(App\User::class, 2)->create();`
+27. `factory(App\Article::class, 5)->create(['user_id' => 1 ]);`
+28. delete user one and see if all his articles were deleted.
+29. tinker
+30. `App\User::find(1);`
+31 `$user = App\User::find(1);`
+32. Article.php Model
+```php
+    public function articles()
+    {
+        return $this->hasMany(Article::class); // select * from articles where user_id = 1 // the 1 is the user_id of $this current user.
+    }
+```
+33. `$user->articles;` Return all the User with Id 1 articles
+34. `tinker` now find reverse.
+35. `App\Article::find(4);`
+36. `App\Article::first(1)->user;` It will return the user object that wrote the article.
+37. if you use author instead of user it will get error single Laravel can recognize that user connects with user_id
+```php
+    public function author()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+```
+38. To make it work you have to pass it another argument
+```php
+    public function author()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+```
+39. `tinker` to test it again.
+40. `App\Article::find(4);`
+41. ` App\Article::find(4)->author;`
+
+
