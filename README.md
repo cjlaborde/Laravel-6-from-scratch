@@ -826,4 +826,55 @@ request()->validate([
 //{{--                      <a href="{{ route('articles.show', $article )}}">--}}
                             <a href="{{ $article->path() }}">
 ```
+### Basic Eloquent Relationships
+1. In the project we currently have 3 models Article.php|Project.php|User.php|
+2. What connection there are? 
+3. User can Connect an article
+4. Imagine you want to access all articles of that specific user.
+5. Ideally you can do something like give me current user articles `$user->articles`
+6. So we need articles method on User.php Model
+```php
+    public function articles()
+    {
+        return $this->hasMany(Article::class); // SQL Query---- select * from articles where user_id = 1 // the 1 is the user_id of $this current user.
+    }
+```
+7. but what about inverse? If I got an article and want to grab the user who wrote it. // `$article->user;` in `Article.php` Model
+```php
+
+    public function users()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+```
+8. What about projects and user? an user can create any number of projects. // `$user->projects` in `User.php` Model
+```php
+    public function projects()
+    {
+        return $this->hasMany(Project::class); // SQL Query---- select * from projects where user_id = 1 // the 1 is the user_id of $this current user.
+    }
+```
+9. A Project belongs to an user `$project->user` in `Project.php` Model
+```php
+    public function user()
+    {
+        return $this->belongsTo(User::class); // SQL Query---- select * from user where project_id = 1 
+    }
+```
+10. If we going to make this work we need an user_id column inside the Project and Article tablets so we can link them together with the user.
+
+11. Give me user with id of 1  `$user = User::find(1)` // `select * from user where id = 1`
+12. Next give me the user projects  `$user->projects;` // `select * from projects where id = $user->id`
+13. This query will return as collection and assigned to this project.
+14. Now when you access `$user->projects` You have what we call an eloquent collection.
+15. you can grab first project `$user->projects->first()` and grab the last project `$user->projects->last()` 
+16. you can find any project that meets some criteria `$user->projects->find` 
+17. You can split in multiple queries `user->projects->slipt(3)`
+18. You can group the projects `$user->projects->groupBy`
+19. Here we learned 2 relationships `HasMany` and `BelongsTo`
+20. There are others like users `hasOne` profile `hasMany` comments/projects/articles etc
+21. There are more complex one like `belongsToMany` when you dealing with pivot tables.
+22. When you dealing with polymorphism relationships `morphMany` `morphToMany`
+23. In the end you mostly going to use only around 4 only `hasOne`, `hasMany`, `BelongsTo` and `belongsToMany`
 
