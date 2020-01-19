@@ -964,4 +964,122 @@ $factory->define(Article::class, function (Faker $faker) {
 40. `App\Article::find(4);`
 41. ` App\Article::find(4)->author;`
 
+### EXTRA: When User Deleted Set Articles as Guest Author.
+1. For another use case if you have articles but you don't want to delete them from your site when the user that wrote them is deleted.
+2. Go to Article.php model and add this method.
+```php
+public function author()
+{
+    return $this->belongsTo(User::class, 'author_id')->withDefault([
+        'name' => 'Guest Author',
+    ]);
+}
+```
+
+### Many to Many Relationships With Linking Tables
+1. How to associate tags with an Article?
+2. An Article has many tags example laravel Article could have tags of `php` `mvc` `framework` `back-end`
+3. Or less do the inverse  does `tag belongs to an article`
+4. If we have a Tag named `Learn Laravel`
+5. We may have tags named `php` `laravel` `educating`
+6. But does that means the `laravel` tag belongs to `Learn Laravel` tag?
+7. Nope because this `laravel` tag could belong to many articles.
+8. An article can have many Tags and a tag can belong to many articles as well.
+9. in Article.php Model to represent this.
+```php
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+```
+10. Now you need to create Tag model. `php artisan make:model Tag -m` with a migration included -m
+11. Move to that migration `create_tags_table.php`
+12. Add string column for the name of the tag
+```php
+        Schema::create('tags', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('name');
+            $table->timestamps();
+        });
+```
+13. Where do we create association between the article and the tag?
+14. We can't use ~~$table->unsignedBigInteger('article_id'); // laravel~~ since we would went back to just using Belongs to many.
+14. Since we can't make `laravel` tag only belong to an article. `laravel` tag show belong to Many Articles how to make this work?
+15. To make this work we need 3 different tables. `Article.php` & `Tag.php` and we Create a separate Pivot Table/Linking table to link them together. 
+16. article_tag convention on how to name it. First singular as the Table you want to create tag for and then tag same as this create_tags_table
+17. in create_tags_table.php
+```php
+class CreateTagsTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('tags', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            # 1) Add string column for the name of the tag
+            # 2) Set the name unique to prevent duplicates.
+            $table->string('name')->unique();
+            $table->timestamps();
+        });
+
+        // article_tag convention on how to name it. First singular as the Table you want to create tag for and then tag same as this create_tags_table
+        Schema::create('article_tag', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            # 1) connection to article in question
+            $table->unsignedBigInteger('article_id');
+            $table->unsignedBigInteger('tag_id');
+            $table->timestamps();
+            # 3) Combination of the article_id and tag_id must be unique. That way don't have duplicates
+            $table->unique(['article_id', 'tag_id']);
+            # 4) Set the foreign key for both.
+            $table->foreign('article_id')->references('id')->on('articles')->onDelete('cascade');
+            $table->foreign('tag_id')->references('id')->on('tags')->onDelete('cascade');
+        });
+    }
+```
+18. `php artisan migrate`
+ 
+19. Enter some tags `php` `laravel` `education`
+20. Add some row data to article_tag table, made sure the id of both Article and Tag exist or you get error.
+21. add method to `Article.php` Model
+```php
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+```
+21. `tinker`
+22. `$article = App\Article::first();`
+23. `$article->tags;`
+24. Only get name of the tag with `$article->tags->pluck('name');`
+```php
+     all: [
+       "php",
+       "laravel",
+       "education",
+     ],
+   }
+
+```
+25. Now we do the inverse and we get all the Articles that have certain tag.
+```php
+    class Tag extends Model
+    {
+        public function articles()
+        {
+            return $this->belongsToMany(Article::class);
+        }
+    }
+```
+26. `tinker`
+27. ` $tag = App\Tag::first();`
+28. `$tag->articles;`
+29. `$tag->articles->pluck('title');`
+```php
+     all: [
+       "Learn Laravel",
+     ],
+   }
+```
+
+
 
