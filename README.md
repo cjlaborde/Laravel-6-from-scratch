@@ -1077,9 +1077,101 @@ class CreateTagsTable extends Migration
 ```php
      all: [
        "Learn Laravel",
-     ],
-   }
+     ]
 ```
+
+
+### Display All Tags Under Each Article
+
+1. Tags are more tricky since a tag doesn't belong to a single article. One Tag could Belongs to Many Articles and one Article could belongs to many tags.
+2. We will show all Tags that belong to an article. Go to `views/articles/show.blade.php`
+```blade
+        @foreach ($article->tags as $tag)
+{{--         <a href="/tags/laravel"> {{ $tag->name }}</a> --}}
+            <a href="/articles?tag={{ $tag->name }}"> {{ $tag->name }}</a>
+        @endforeach
+```
+3. `http://laravel6.test/articles?tag=laravel`
+4.  
+```php
+    public function index(Article $article)
+    {
+        if (request('tag')) {
+            $articles = Tag::where('name', request('tag'))->firstOrFail()->articles;
+
+            return $articles;
+        }
+```
+5. visit http://laravel6.test/articles?tag=laravel to see the json.
+
+```json
+    [
+        {
+            id: 1,
+            user_id: 1,
+            title: "Learn Laravel",
+            excerpt: "Modi enim sequi impedit autem aliquam numquam qui.",
+            body: "Eum corrupti laboriosam ut voluptas sit aut eos sit. Itaque ducimus quos aut et ex ab. Voluptate ut magni nihil qui in cum ducimus.",
+            created_at: "2020-01-19 00:55:03",
+            updated_at: "2020-01-19 00:55:03",
+            pivot: {
+              tag_id: 2,
+              article_id: 1
+            }
+        }
+    ]
+```
+6. Simple Filtering in ArticlesController.php
+```php
+        public function index(Article $article)
+        {
+            if (request('tag')) {
+                $articles = Tag::where('name', request('tag'))->firstOrFail()->articles;
+            } else {
+                $articles = Article::latest()->paginate(3);
+            }
+            return view('articles.index', ['articles' => $articles]);
+        }
+```
+7. But if we visit page with a tag where we have no article the page will be empty to fix it go to `views/articles/index.blade.php`
+8. with forelse is same as foreach but also include if statement
+```blade
+            @forelse ($articles as $article)
+                <div id="content">
+                    <div class="title">
+                        <h2>
+                            <a href="{{ $article->path() }}">
+                                {{ $article->title }}
+                            </a>
+                        </h2>
+                        <span class="byline">{{ $article->excerpt }}</span> </div>
+                    <p><img src="/images/banner.jpg" alt="" class="image image-full" /></p>
+                </div>
+            @empty
+                <p>No revelant articles yet.</p>
+            @endforelse
+```
+9. Go to `views/article/show.blade.php`  replace link with the route name
+```blade
+            @foreach ($article->tags as $tag)
+{{--                        <a href="/articles?tag={{ $tag->name }}"> {{ $tag->name }}</a>--}}
+                <a href="{{ route('articles.index', ['tag' => $tag->name]) }}">{{ $tag->name }}</a>
+            @endforeach
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
