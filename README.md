@@ -1391,3 +1391,178 @@ array:5 [
         Please Sign-in
     @endguest
 ``` 
+### The Password Reset Flow| How to See Laravel Under the hood.
+    1. Click "Forget Password"
+    2. Fill out a form with their email address.
+    3. Prepare a unique token and associate it with user's account.
+    4. Send an email with a unique link back to our site that confirms email ownership.
+    5. Link back to website, conform the token, and set a new password.
+
+1. if you try  send email to reset password but get error message
+2. You need to configure your mail first in the `.env`  or `config/mail.php`
+3. in `.env` change driver to `MAIL_DRIVER=log`  this means it will log to a file in `storage/logs`
+4. Then go to database and delete password_reset table data since the email failed for not been configured yet.
+5. Check the log file `storage/logs/laravel.log` and you will see
+```blade
+If you’re having trouble clicking the "Reset Password" button, copy and paste the URL below
+into your web browser: [http://localhost/password/reset/6d1e924885c?email=john%40gmail.com](http://localhost/password/reset/6d1e97790380ffb88233ad9c?email=john%40gmail.com)
+```
+6. In the password_reset table you will see token but that one is the hash version of this one since laravel automatically generate one for security.
+7. Notice that link is localhost that is because we have not set localhost yet.
+8. The token must be exact or you get error. After password gets reset the password_resets should delete itself.
+9. Lets figure out how it works. `php artisan route:list` To see the routes leading to controllers and how it works.
+10. `ForgotPasswordController.php`  click on  ---> `use SendsPasswordResetEmails;`
+11. It goes to SendsPasswordResetEmails.php
+```php
+    public function showLinkRequestForm()
+    {
+        return view('auth.passwords.email');
+    }
+```
+12. Which return the view that has the password reset `email.blade.php`
+13. There you will find form that submits to `<form method="POST" action="{{ route('password.email') }}">`
+14. Then check `php artisan route:list` to see where that route for `password.email` is at
+15. which it links to the controller `ForgotPasswordController@sendResetLinkEmail`
+16.  Where it validate email 
+```php
+    public function sendResetLinkEmail(Request $request)
+    {
+        $this->validateEmail($request);
+
+        // We will send the password reset link to this user. Once we have attempted
+        // to send the link, we will examine the response then see the message we
+        // need to show to the user. Finally, we'll send out a proper response.
+        $response = $this->broker()->sendResetLink(
+            $this->credentials($request)
+        );
+
+```
+17. Validate email using
+```php
+    protected function validateEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+    }
+```
+18. Then laravel uses concept of password broker and it calls  the sndResetLink and then provides user credentials.
+
+```php
+        $response = $this->broker()->sendResetLink(
+            $this->credentials($request)
+        );
+```
+19. The credentials is the email address in this case.
+```php
+    protected function credentials(Request $request)
+    {
+        return $request->only('email');
+    }
+```
+20. Then we check `sendResetLink` method inside `PasswordsBroker.php` class, you can reach here by clicking.
+21. Checks the user `$user = $this->getUser($credentials);`
+22. here is where the notification gets fired off
+```php
+        $user->sendPasswordResetNotification(
+            $this->tokens->create($user)
+        );
+```
+22. Notice is calling the `sendPasswordResetNotification` directly on the $user model.
+23. go to User.php model to figure our how. The reason is that User.php Model `use Notifiable;` trait and also extend this Authenticatable class.
+24. `use Illuminate\Foundation\Auth\User as Authenticatable;`
+25. You will see trait called `CanResetPassword` follow it and click it.
+```php
+    class User extends Model implements
+        AuthenticatableContract,
+        AuthorizableContract,
+        CanResetPasswordContract
+    {
+        use Authenticatable, Authorizable, CanResetPassword, MustVerifyEmail;
+    }
+```
+26.  So in PasswordBroker.php this is the method we actually calling
+```php
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+```
+27. All it does is notify user and sends through a notification class. Follow it `ResetPasswordNotification`
+28. Then follow `use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;`
+29. This is basically the blueprint of an email
+```php
+    public function toMail($notifiable)
+    {
+        if (static::$toMailCallback) {
+            return call_user_func(static::$toMailCallback, $notifiable, $this->token);
+        }
+
+        return (new MailMessage)
+            ->subject(Lang::get('Reset Password Notification'))
+            ->line(Lang::get('You are receiving this email because we received a password reset request for your account.'))
+            ->action(Lang::get('Reset Password'), url(config('app.url').route('password.reset', ['token' => $this->token, 'email' => $notifiable->getEmailForPasswordReset()], false)))
+            ->line(Lang::get('This password reset link will expire in :count minutes.', ['count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire')]))
+            ->line(Lang::get('If you did not request a password reset, no further action is required.'));
+    }
+```
+30. The key here is we adding button to reset password. Then we sending the url back to our website.
+```php
+ ->action(Lang::get('Reset Password'), url(config('app.url').route('password.reset', ['token' => $this->token, 'email' => $notifiable->getEmailForPasswordReset()], false)))
+```
+31. What is going here is we fill up the form, and setup the token. Then fire up an email, then when the user click on that email.
+32. Then when user click on that email they go to the route 
+33. `GET|HEAD | password/reset/{token}  | password.reset   | App\Http\Controllers\Auth\ResetPasswordController@showResetForm`
+34. Then goes to the ResetPasswordController controller.
+35. Then click on `use ResetsPasswords;` trait
+36. Where we show a view to reset the password.
+```php
+    public function showResetForm(Request $request, $token = null)
+    {
+        return view('auth.passwords.reset')->with(
+            ['token' => $token, 'email' => $request->email]
+        );
+    }
+```
+37. Then here is were we finally finish up
+```php
+    public function reset(Request $request)
+    {
+        //#-- 1) Validate Request
+        $request->validate($this->rules(), $this->validationErrorMessages());
+
+        // Here we will attempt to reset the user's password. If it is successful we
+        // will update the password on an actual user model and persist it to the
+        // database. Otherwise we will parse the error and return the response.
+
+        //#-- 2) Then we use password browser to reset email.
+        $response = $this->broker()->reset(
+            $this->credentials($request), function ($user, $password) {
+        
+        //#-- 3) Then we pass this closure that actually update the user. Click resetPassword
+                $this->resetPassword($user, $password);
+            }
+        );
+
+        // If the password was successfully reset, we will redirect the user back to
+        // the application's home authenticated view. If there is an error we can
+        // redirect them back to where they came from with their error message.
+        return $response == Password::PASSWORD_RESET
+                    ? $this->sendResetResponse($request, $response)
+                    : $this->sendResetFailedResponse($request, $response);
+    }
+```
+38. click on resetPassword `$this->resetPassword($user, $password);`
+```php
+    protected function resetPassword($user, $password)
+    {
+        $this->setUserPassword($user, $password);
+        # 1) We set Token
+        $user->setRememberToken(Str::random(60));
+        # 2) We Persist it
+        $user->save();
+        # 3) File off an event
+        event(new PasswordReset($user));
+        # 4) Then log in the user.
+        $this->guard()->login($user);
+    }
+```
+39. You don't need to do any of this since laravel does it for you and just works.
