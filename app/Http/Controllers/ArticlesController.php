@@ -54,10 +54,11 @@ class ArticlesController extends Controller
         return view('articles.show', ['article' => $article]);
     }
 
-
     public function create()
     {
-        return view('articles.create');
+        return view('articles.create', [
+            'tags' => Tag::all()
+        ]);
     }
 
     // Persist the create form
@@ -135,11 +136,27 @@ class ArticlesController extends Controller
     }
 */
 
+//    public function store()
+//    {
+//        dd(request()->all());
+//        $article = Article::create($this->validateArticle());
+//        // Redirect data
+////        return redirect('/articles');
+//        return redirect(route('articles.index'));
+//    }
+
     public function store()
     {
-        Article::create($this->validateArticle());
-        // Redirect data
-//        return redirect('/articles');
+        # build article and pass what I need from the request.
+        $article = new Article(request(['title', 'excerpt', 'body']));
+        # set user id
+        $article->user_id = 1; // we normally set the id with who ever is signed in // auth()->id();
+        # save it
+        $article->save();
+        # attach the tags.
+        # you can attach or detach records on a pivot/linking table
+        $article->tags()->attach(request('tags')); // [1,2,3]
+
         return redirect(route('articles.index'));
     }
 
@@ -177,8 +194,7 @@ class ArticlesController extends Controller
         $article->excerpt = request('excerpt');
         $article->body = request('body');
 
-        $article->save();
-
+        $article->s
         return redirect('/articles/' . $article->id);
     }
     */
@@ -206,7 +222,9 @@ class ArticlesController extends Controller
         return request()->validate([
             'title' => ['required', 'min:3', 'max:255'],
             'excerpt' => 'required',
-            'body' => 'required'
+            'body' => 'required',
+            # exist on the tags table looking at the id column. The tag id needs to exist in the tag table.
+            'tags' => 'exists:tags,id'
         ]);
     }
 }

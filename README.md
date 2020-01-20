@@ -1158,20 +1158,176 @@ class CreateTagsTable extends Migration
                 <a href="{{ route('articles.index', ['tag' => $tag->name]) }}">{{ $tag->name }}</a>
             @endforeach
 ```
+### Attach and Validate Many-to-Many Inserts
+1. Add menu so that people can select the tags of their Article
+2 Got to `/views/articles/create.blade.php`
+3. Reuse the Body field for the tags
+4. A shortcut way to get error messages is using `<p class="help is-danger">{{ $message }}</p>` As long as you use.
+```blade
+    @error('tags')
+<!--        <p class="help is-danger">{{ $errors->first('tags') }}</p>-->
+        <p class="help is-danger">{{ $message }}</p>
+    @enderror
+```
+5. @message will render the error message what ever the key is in @error('tags')
+6. here is the Tags field
+```blade
+    <div class="field">
+        <label class="label" for="body">Tags</label>
 
+        <div class="control">
+            <select
+                name="tags[]"
+            >
+                @foreach($tags as $tag)
+                    <option value="{{ $tag->id }}">{{ $tag->name }}</option>
+                @endforeach
+            </select>
 
+            @error('tags')
+                <p class="help is-danger">{{ $errors->first('tags') }}</p>
+            @enderror
+        </div>
+    </div>
+```
+7. You will get error since it can't find tags so go to `ArticleController.php`
+```php
+        public function create()
+        {
+            return view('articles.create', [
+                'tags' => Tag::all()
+            ]);
+        }
+```
+8. Check the select element with inspect and notice the value is the id.
+9. After we submit the form we would submit the store() method.
+10. Go to ArticlesController.php
+```php
+    public function store()
+    {
+        dd(request()->all());
+        $article = Article::create($this->validateArticle());
+        return redirect(route('articles.index'));
+    }
+```
+11. This is the request as you see the is an array.
+```json
+    array:5 [
+      "_token" => "3onuZscIZUzTS7UleijbGu489sVrNMPGe3KuxksP"
+      "title" => "Pizza Food"
+      "excerpt" => "Pizza Food"
+      "body" => "Pizza Food"
+      "tags" => array:1 [
+        0 => "1"
+      ]
+    ]
+```
+12. The reason is because we have `name="tags[]"` if we remove   `name="tags"` we would have single number but in this case we dealing with a belongs to many.
+13. Since we plan to have multiple tags. so we use
+```blade
+    <select
+        name="tags[]"
+        multiple
+    >
+```
+14. Then when I submitted it. All those tags can be attached to single array.
+```json
+array:5 [
+  "_token" => "3onuZscIZUzTS7UleijbGu489sVrNMPGe3KuxksP"
+  "title" => "My Second Project"
+  "excerpt" => "My Second Project"
+  "body" => "My Second Project"
+  "tags" => array:3 [
+    0 => "1"
+    1 => "2"
+    2 => "3"
+  ]
+]
+```
+15. We can not create Article yet since there is no user_id since we will deal with that when we work with authentication so this is what we will do instead.
+16. We are hardcoding the user_id since we will work with that in next chapter.
+```php
+    public function store()
+    {
+        $article = new Article($this->validateArticle());
+        $article->user_id = 1; // we normally set the id with who ever is signed in // auth()->id();
+        $article->save();
 
+        # you can attach or detach records on a pivot/linking table
+        $article->tags()->attach(request('tags'));
+        
+        return redirect(route('articles.index'));
+    }
 
+```
+17. you can attach or detach records on a pivot/linking table. 
+18. To see how this work lets use `tinker`
+19. `App\Article::find(3);`
+20. `$article = App\Article::find(3);`
+21. `$article->tags()->attach(1);`
+22. You can pass array as well to select multiple tags `$article->tags()->attach([2, 4]);`
+23. You can also remove `$article->tags()->detach(2);`
+24. `tinker`
+25. `$tag = App\Tag::find(1);`
+26. `$article->tags()->attach($tag);` You can attach the first tag to the article.
+27. `$tag = App\Tag::findMany([1,2]);` will find many and put then in array of the collection of those tags.
+28. `$article->tags()->attach($tag);`
+29. Now that you understand the basics on how it works.
+30. Now go to ArticleController.php in store method to use what we learned.
+```php
+    public function store()
+    {
+        $article = new Article($this->validateArticle());
+        $article->user_id = 1; // we normally set the id with who ever is signed in // auth()->id();
+        $article->save();
 
+        # you can attach or detach records on a pivot/linking table
+        $article->tags()->attach(request('tags')); // [1,2,3]
 
+        return redirect(route('articles.index'));
+    }
 
+```
+31. Create new Post and check that the new post has multiple tags.
+32. Now what if someone adds a tag that is not supported?
+33. Add new option in browser using the web development inspect tools in the browser and add ` <option value="5">acme</option>`
+34. The page show error, so it would be better if we stop it at it's tract at the validation layer in ArticleController.php
+```php
+    protected function validateArticle(): array
+    {
+        return request()->validate([
+            'title' => ['required', 'min:3', 'max:255'],
+            'excerpt' => 'required',
+            'body' => 'required',
+            # exist on the tags table looking at the id column. The tag id needs to exist in the tag table.
+            'tags' => 'exists:tags,id'
+        ]);
+    }
+```
+35. `ErrorException Array to string conversion` you get error since tags not part of Article is a relationship so we need to make some changes.
+36. Go to Articles controller and modify ArticlesController.php
+```php
+    public function store()
+    {
+        # build article and pass what I need from the request.
+        $article = new Article(request(['title', 'excerpt', 'body']));
+        # set user id
+        $article->user_id = 1; // we normally set the id with who ever is signed in // auth()->id();
+        # save it
+        $article->save();
+        # attach the tags.
+        # you can attach or detach records on a pivot/linking table
+        $article->tags()->attach(request('tags')); // [1,2,3]
 
-
-
-
-
-
-
-
+        return redirect(route('articles.index'));
+    }
+```
+37. Notice in database timestamps are not saved to relationships so to fix this go to Article.php
+```php
+        public function tags()
+        {
+            return $this->belongsToMany(Tag::class)->withTimestamps();
+        }
+```
 
 
