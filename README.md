@@ -1329,5 +1329,65 @@ array:5 [
             return $this->belongsToMany(Tag::class)->withTimestamps();
         }
 ```
+### Build a Registration System in Mere Minutes
+1. `composer require laravel/ui --dev`
+2. `php artisan` you will see 2 new commands ui and ui:auth
+3. `php artisan help ui`
+4. `php artisan ui vue --auth`
+5. `npm install && npm run dev`
+6. It will install views for auth|password recovery and route for dashboard and all the auth routes.
+7. `php artisan route:list` will show list of all routes.
+8. to install boostrap `php artisan ui boostrap`
+9. Register and log in
+10. Notice that the Dashboard `Route::get('/home', 'HomeController@index')->name('home');` can only be assessed if logged in.
+11. Go to HomeController to see why.
+```php
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+```
+12. If you remove this `$this->middleware('auth');` any guest will be able to access the dashboard section.
+13. Before user can get to index() it needs to pass the __construct() method. You must be signed it to be allowed pass the `middleware('auth)`
+14. Alternatively you can also add the middleware to the route. `Route::get('/home', 'HomeController@index')->name('home')->middleware('auth');`
+15. got to `home.blade.php`, then You can access Database fields in the views by
+16. You are logged in, `{{ Auth::user() }}` You have access to the entire User model.
+```json
+{"id":2,"name":"John","email":"john@gmail.com","email_verified_at":null,"created_at":"2020-01-20 01:01:32","updated_at":"2020-01-20 01:01:32"}
+```
+17. So to only access the name use `{{ Auth::user()->name }}` 
+18. Alternatively you can use `{{ auth()->user()->name }}`
+19. You can also use it, in public pages so, depending if user logged in or not shows different message
+```blade
+    <div id="banner" class="container">
+        <a href="#" class="button">
+            @if (Auth::check())
+                Welcome, {{ Auth::user()->name }}
+            @else
+                Welcome
+            @endif
+        </a>
+    </div>
+```
+20. But since this is so common Laravel provides a directive for this very purpose.
+```blade
+    <div id="banner" class="container">
+        <a href="#" class="button">
+            @auth
+                Welcome, {{ Auth::user()->name }}
+            @else
+                Welcome
+            @endauth
+            @guest 
+                Please Sign-in
+            @endguest
+        </a>
+    </div>
 
-
+```
+21. Sometimes you want to use the opposite. The opposite of @auth is @guest
+```blade
+    @guest
+        Please Sign-in
+    @endguest
+``` 
