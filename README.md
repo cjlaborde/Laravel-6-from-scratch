@@ -1566,3 +1566,333 @@ into your web browser: [http://localhost/password/reset/6d1e924885c?email=john%4
     }
 ```
 39. You don't need to do any of this since laravel does it for you and just works.
+
+### Collections "Linking Together Laravel Collection.php methods"
+
+> Our first core concept is collection chaining. As you've surely learned by now, when fetching multiple records from a database, a Collection instance is returned. Not only does this object serve as a wrapper around your result set, but it also provides dozens upon dozens of useful manipulation methods that you'll reach for in every project you build.
+
+1. `tinker`
+2. `App\Article::first();` Because we only fetching 1 article. We get article instance which means we have access to all those attributes.
+3. Here you get a Article instead of Collection. `App\Article {#3045`
+```json
+ App\Article {#3045
+     id: 1,
+     user_id: 1,
+     title: "Learn Laravel",
+     excerpt: "Modi enim sequi impedit autem aliquam numquam qui.",
+     body: "Eum corrupti laboriosam ut voluptas sit aut eos sit. Itaque ducimus quos aut et ex ab. Voluptate ut magni nihil qui in cum ducimus.",
+     created_at: "2020-01-19 00:55:03",
+     updated_at: "2020-01-19 00:55:03",
+   }
+```
+3. `App\Article::first()->title;` => `"Learn Laravel"`
+4. Fetch All Articles. `App\Article::all();` Instead of a single one.
+5. > When you use all(); You don't get a response, you get a `Collection` in Instead => Illuminate\Database\Eloquent\Collection {#3051}`
+```json
+=> Illuminate\Database\Eloquent\Collection {#3051
+     all: [
+       App\Article {#3052
+         id: 1,
+         user_id: 1,
+         title: "Learn Laravel",
+         excerpt: "Modi enim sequi impedit autem aliquam numquam qui.",
+         body: "Eum corrupti laboriosam ut voluptas sit aut eos sit. Itaque ducimus quos aut et ex ab. Voluptate ut magni nihil qui in cum ducimus.",
+         created_at: "2020-01-19 00:55:03",
+         updated_at: "2020-01-19 00:55:03",
+       },
+       App\Article {#3053
+         id: 2,
+         user_id: 1,
+         title: "Et consequatur eveniet nam quas.",
+         excerpt: "Ipsum magnam aut fuga architecto quibusdam voluptatem modi.",
+         body: "Maxime nostrum ut sapiente vitae. Mollitia omnis voluptate eos. Assumenda alias laborum sequi.",
+         created_at: "2020-01-19 00:55:03",
+         updated_at: "2020-01-19 00:55:03",
+       },
+       App\Article {#3054
+         id: 3,
+         user_id: 1,
+         title: "Dolor possimus reprehenderit reiciendis delectus voluptatibus eveniet soluta.",
+         excerpt: "Omnis harum assumenda consequuntur beatae.",
+         body: "Mollitia fuga autem voluptate facere fuga libero odio earum. Ipsam nulla nostrum quibusdam sunt doloremque qui molestias. Libero repellat vero voluptas rem deleniti est. Omnis repudiandae eaque velit aut velit non.",
+         created_at: "2020-01-19 00:55:03",
+         updated_at: "2020-01-19 00:55:03",
+       },
+     ],
+   }
+```
+6. Collection is not just wrapper around a series of items.
+7. `$tags = App\Article::first()->tags;`  The tags of the first Article.
+8. `$tags->first();` Get the first tag.
+9. `$tags->last();` Get the last tag.
+10. Filter the one where name is laravel `$tags->where('name', 'laravel')` This one use `Collection`. Here is not a Database Query.
+```json
+=> Illuminate\Database\Eloquent\Collection {#3060
+     all: [
+       1 => App\Tag {#3052
+         id: 2,
+         name: "laravel",
+         created_at: "2020-01-18 20:56:17",
+         updated_at: "2020-01-18 20:56:20",
+         pivot: Illuminate\Database\Eloquent\Relations\Pivot {#3050
+           article_id: 1,
+           tag_id: 2,
+           created_at: "2020-01-18 21:07:55",
+           updated_at: "2020-01-18 21:07:57",
+         },
+       },
+     ],
+   }
+```
+11. `App\Tag::where('name', 'laravel')->first()` Is not the same, it's an SQL query instead.
+```json
+=> App\Tag {#3061
+     id: 2,
+     name: "laravel",
+     created_at: "2020-01-18 20:56:17",
+     updated_at: "2020-01-18 20:56:20",
+   }
+>>> 
+```
+12. Go to the collection class. At `Illuminate/Support/Collection.php`
+13. Check the Structure and see all methods it contains.
+14. Lets check it's first method, which gets first item from collection.
+15. Notice that first() also accepts an optional callback `callable $callback = null`
+```php
+    public function first(callable $callback = null, $default = null)
+    {
+        return Arr::first($this->items, $callback, $default);
+    }
+```
+16. in `tinker` We have our `$tags` collection
+17.  Give me tag where the length of the name is greater than 5`$tags->first(function ($tag) { return strlen($tag->name) > 5; });`
+18. Give me tag where the length of the name is less than 5`$tags->first(function ($tag) { return strlen($tag->name) < 5; });`
+19. Will flatten a nested array into a single one.
+```php
+    public function flatten($depth = INF)
+    {
+        return new static(Arr::flatten($this->items, $depth));
+    }
+```
+20. Now we will learn how to create a collection from scratch. in `tinker` use `collect(['one', 'two', 'three'])`
+21. `collect(['one', 'two', 'three'])->first()` Here return first one `'one'`
+22. Now using nested array. `collect(['one', 'two', 'three', ['four', 'five'], 'six']);`
+```json
+=> Illuminate\Support\Collection {#3067
+     all: [
+       "one",
+       "two",
+       "three",
+       [
+         "four",
+         "five",
+       ],
+       "six",
+     ],
+   }
+```
+23. `collect(['one', 'two', 'three', ['four', 'five'], 'six'])->flatten();` Here flatten it out to single level.
+```json
+=> Illuminate\Support\Collection {#3059
+     all: [
+       "one",
+       "two",
+       "three",
+       "four",
+       "five",
+       "six",
+     ],
+   }
+```
+24. The main methods used on Collection.php are 
+
+        1. filter()
+        2. map()
+        3. flatMap()
+        4. where()
+        5. merge()
+25. There is also zip() but takes time to understand the correct use for it.
+26. > filter()
+27. ` $items = collect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);`
+```json
+=> Illuminate\Support\Collection {#3076
+     all: [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+     ],
+   }
+```
+28. Filter items that are equal or greater than 5 `$items->filter(function ($item) {return $item >= 5; });`
+```json
+=> Illuminate\Support\Collection {#3036
+     all: [
+       4 => 5,
+       5 => 6,
+       6 => 7,
+       7 => 8,
+       8 => 9,
+       9 => 10,
+     ],
+   }
+```
+29. It's not destructive since it didn't rewrite original variable.
+30. `$items`
+```json
+=> Illuminate\Support\Collection {#3076
+     all: [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+     ],
+   }
+```
+31. Which means if you want to keep it filter it you have to save it to a variable.
+32. `$greaterThan4 = $items->filter(function ($item) {return $item >= 5; });`
+33. If item divided by 2 no remainder "%" `$items->filter(function ($item) { return $item % 2 === 0; });`
+```json
+=> Illuminate\Support\Collection {#3064
+     all: [
+       1 => 2,
+       3 => 4,
+       5 => 6,
+       7 => 8,
+       9 => 10,
+     ],
+   }
+```
+34. Notice that we get a Collection as response `=> Illuminate\Support\Collection `
+35. Which means all these methods are perfectly chainable.
+36. > map()
+37. After we filter them, we will map over them for 'each one' and perform a return the item * 3 on each of the items.
+38. `$items->filter(function ($item) { return $item % 2 === 0; })->map(function ($item) { return $item * 3; });`
+```json
+=> Illuminate\Support\Collection {#3060
+     all: [
+       1 => 6,
+       3 => 12,
+       5 => 18,
+       7 => 24,
+       9 => 30,
+     ],
+   }
+```
+39. `$items->filter(function ($item) { return $item % 2 === 0; })->map(function ($item) { return $item * 3; })->last();` and you get `30`
+40. `$articles = App\Article::all();` and I want to group them based on their Tags.
+41. Now we will iger loaded the Tag relationship. ` $articles = App\Article::with('tags')->get();`
+```json
+=> Illuminate\Database\Eloquent\Collection {#3063
+     all: [
+       App\Article {#3062
+         id: 1,
+         user_id: 1,
+         title: "Learn Laravel",
+         excerpt: "Modi enim sequi impedit autem aliquam numquam qui.",
+         body: "Eum corrupti laboriosam ut voluptas sit aut eos sit. Itaque ducimus quos aut et ex ab. Voluptate ut magni nihil qui in cum ducimus.",
+         created_at: "2020-01-19 00:55:03",
+         updated_at: "2020-01-19 00:55:03",
+         tags: Illuminate\Database\Eloquent\Collection {#3085
+           all: [
+             App\Tag {#3096
+               id: 1,
+               name: "php",
+               created_at: "2020-01-18 20:56:02",
+               updated_at: "2020-01-18 20:56:04",
+               pivot: Illuminate\Database\Eloquent\Relations\Pivot {#3095
+                 article_id: 1,
+                 tag_id: 1,
+                 created_at: "2020-01-18 21:02:11",
+                 updated_at: "2020-01-18 21:02:13",
+               },
+             },
+           ],
+         },
+       },
+     ],
+   }
+```
+42. `$articles = App\Article::with('tags')->get();` the tags is corresponding with the tags() method inside the model `Article.php`
+43. What if we want to plug all the tags that are included as part of this collection. For example build a tag tree on the sidebar.
+44. `$articles` we want to pluck the name of each article. But will not work as you think.
+45.  If wanted to pluck the title that would work. `$articles->pluck('title')`
+```json
+=> Illuminate\Support\Collection {#3122
+     all: [
+       "Learn Laravel",
+       "Et consequatur eveniet nam quas.",
+       "Dolor possimus reprehenderit reiciendis delectus voluptatibus eveniet soluta.",
+       "Post Three3",
+       "google",
+       "Pizza Food",
+     ],
+   }
+
+```
+46.  But if we use `$articles->pluck('tags')` that would give me collection of various collections. Because for each article there is a number of tags.
+47. What we can do is pluck the tags and then flatten it all down. by using `$articles->pluck('tags')->collapse()`
+48. So that would give me a list of all tags used instead of grouped for each Article.
+49. Then from that point we can pluck the name of the tags. `$articles->pluck('tags')->collapse()->pluck('name')`
+```json
+     all: [
+       "php",
+       "laravel",
+       "education",
+       "php",
+       "laravel",
+       "php",
+       "laravel",
+       "education",
+       "php",
+       "education",
+     ],
+   }
+```
+50. But there are duplicates we only want unique items.
+51. So we use `$articles->pluck('tags')->collapse()->pluck('name')->unique();`
+```json
+=> Illuminate\Support\Collection {#3082
+     all: [
+       "php",
+       "laravel",
+       "education",
+     ],
+   }
+
+```
+52. This is great when you want to build a sidebar menu.
+53. Laravel has '.' Dot Notation for example view('articles.show')
+54. You can also use it for `$articles->pluck('tags.name')`
+55. But will not work because we got collection of tags.
+56. What we can do is sudo flatten by using the star here.
+57. `$articles->pluck('tags.*.name')`
+58. Now you get new one but you get empty arrays. Since some articles have no tags.
+59. so we need to collapse and flatten then down as well add unique items.
+60. $articles->pluck('tags.*.name')->collapse()->unique()
+61. So what we can do is save it to something like `$revelantTags =$articles->pluck('tags.*.name')->collapse()->unique();`
+62. But what if you want the tags to be Uppercase
+63. `$articles->pluck('tags.*.name')->collapse()->unique()->map(function ($item) { return ucwords($item); })`
+```json
+     all: [
+       "Php",
+       "Laravel",
+       "Education",
+     ],
+   }
+```
+64. What is the difference between flatten() and collapse()
+> collapse only goes one level deep on the collection, and flatten is a recursive function that goes to the deepest level of the collection, you may optionally pass to flatten function an argument that controls the "depth".
+
