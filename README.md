@@ -1896,3 +1896,45 @@ into your web browser: [http://localhost/password/reset/6d1e924885c?email=john%4
 64. What is the difference between flatten() and collapse()
 > collapse only goes one level deep on the collection, and flatten is a recursive function that goes to the deepest level of the collection, you may optionally pass to flatten function an argument that controls the "depth".
 
+### CSRF Attacks, With Examples
+>In a CSRF attack an innocent end user is tricked by an attacker into submitting a web request that they did not intend. This may cause actions to be performed on the website that can include inadvertent client or server data leakage, change of session state, or manipulation of an end user's account.
+
+1. Laravel uses `419` for a failed CSRF authentication. You can find the error codes on `Response.php`
+2. Go to the `Kernel.php` There are all the middleware that is run when a new request is form.
+```json
+    protected $middlewareGroups = [
+        'web' => [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            // \Illuminate\Session\Middleware\AuthenticateSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]
+```
+3. There is section called   `\App\Http\Middleware\VerifyCsrfToken::class`
+4. Click it and follow it and follow `VerifyCartToken.php'
+5. see the handle() method inside `VerifyCartToken.php` 
+5. Then it checks with `$this->tokensMatch($request);` 
+6. So is trying to fetch a token from request `$token->getTokenFromRequests($request);`
+7. Then compares it with token in the session that laravel creates automatically `hash_equals($request->session()->token(), $token);`
+8. If those don't match is going to `throw new TokenMismatchException('CSRF token mismatch.');` and that is converted to 419 error.
+9. `@csrf` is a helper thant will expand to a hidden input.
+10. `<input type="hidden" name="_token" value="l9mYJPocp8ho8iiwerkGSbJtHLzjUsM0ZnMrgLHb">`
+11. Notice that the value is equal to that token from the session.
+12. So when submit the token the token is included as part of the request.
+13. There will be situations you don't want automatically Csrf Exceptions.
+14. So go to `class VerifyCsrfToken extends Middleware` and edit the '$except = [`
+15. A common situation where you don't want CSRF is for stripe webhost.
+16. Example when a charge is performed at Laracast. It will hit stripe server and payment is created.
+17. Then Stripe will ping a url to the server with a big payload data that I can use to update user and record something in database.
+18. This is called Stripe web hooks.
+19. In these situations I want to exclude my stripe webhost.
+20. Remember when ever you create a form always include the `@csrf`  yet even if you forget the browser will receive error `419`
+```blade
+<form>
+    @csrf
+</form>
+```
+> Another alternative to CSRF, check for origin/referer header, this will prevent CSRF attacks, You may also set SameSite cookie property to lax or strict. Using a hidden CSRF token can be problematic when the form requires too much time to fill or when you leave a page open too long then try to submit the form.

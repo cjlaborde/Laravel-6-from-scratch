@@ -18,7 +18,8 @@ class VerifyCsrfToken extends Middleware
      *
      * @var array
      */
+    # Exclude Stripe webhost
     protected $except = [
-        //
+        '/webhook/*'
     ];
 }
