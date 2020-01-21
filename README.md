@@ -1938,3 +1938,226 @@ into your web browser: [http://localhost/password/reset/6d1e924885c?email=john%4
 </form>
 ```
 > Another alternative to CSRF, check for origin/referer header, this will prevent CSRF attacks, You may also set SameSite cookie property to lax or strict. Using a hidden CSRF token can be problematic when the form requires too much time to fill or when you leave a page open too long then try to submit the form.
+
+### Service Container Fundamentals
+> Service container is a Container for Services, is a place to store and retrieve services
+1. Service is any kind of data. It could be string, object, number, collection.
+2. Create a route for Container
+```php
+Route::get('/container', function () {
+    # 1) Instantiate a container.
+    $container = new \App\Container();
+
+    # 2) If we want to store things we can use any method we want.
+    # 3) When you call bind you need to give it some key and some kind of data.
+    # 4) Create new Class App/Example.php to bind to.
+    $container->bind('example', function () {
+        #5) Here we instantiate the example class.
+        return new \App\Example();
+    });
+    
+    ddd($container);
+
+    return view('welcome');
+});
+
+```
+3. You need to create bind() method on Container class or it will fails
+```php
+class Container
+{
+    # A Container stores services with that in mind create array to store it
+    protected $binding = [];
+
+    public function bind($key, $value)
+    {
+        # when this method gets called push to binding array.
+        $this->binddings[$key] = $value;
+    }
+}
+
+```
+4. Return from ddd($container)
+> Laravel Ignition introduces a global ddd() helper available in all Laravel 6 installations and applications that have Ignition 1.9+ installed. This global helper is dd() with the power of Ignition on top:
+
+```json
+App\Container {#236 ▼
+  #binding: []
+  +"binddings": array:1 [▼
+    "example" => Closure() {#267 ▼
+      class: "Illuminate\Routing\RouteFileRegistrar"
+      this: Illuminate\Routing\RouteFileRegistrar {#194 …}
+      file: "/home/cjlaborde/Sites/laravel6/routes/web.php"
+      line: "28 to 31"
+    }
+  ]
+}
+```
+5. How to get access to Example() ?
+6. Inside `Route::get('/container', function () {` add `$example = $container->resolve('example');`
+7. and `ddd($example);`
+```php
+Closure() {#267 ▼
+  class: "Illuminate\Routing\RouteFileRegistrar"
+  this: Illuminate\Routing\RouteFileRegistrar {#194 …}
+  file: "/home/cjlaborde/Sites/laravel6/routes/web.php"
+  line: "28 to 31"
+}
+```
+8. But I want what ever is returned from the closure.
+```php
+    public function resolve($key)
+    {
+        # if we have anything in that bidding array then return it
+        if (isset($this->bindings[$key])) {
+            return call_user_func($this->bindings[$key]);
+        }
+    }
+```
+9. Now if you want to resolve a key that doesn't exist. You can return false or throw an exception.
+10. When there is no key you can do what you choose to.
+11. Basic Idea of a Container
+```php
+    protected $bindings = [];
+    # 1) You bind something to the container.
+    public function bind($key, $value)
+    {
+        # when this method gets called push to binding array.
+        $this->bindings[$key] = $value;
+    }
+
+    # 2) Then later you resolve it out of the container.
+    public function resolve($key)
+    {
+        # if we have anything in that bidding array then return it
+        if (isset($this->bindings[$key])) {
+            return call_user_func($this->bindings[$key]);
+        }
+    }
+```
+12. Next go to the Example.php add the go() method
+```php
+class Example
+{
+    public function go()
+    {
+        dump('it works!');
+    }
+}
+```
+13. 
+
+```php
+Route::get('/container', function () {
+    ###  This data usually goes to what is called a service provider.
+    # 1) Instantiate a container.
+    $container = new \App\Container();
+
+    # 2) If we want to store things we can use any method we want.
+    # 3) When you call bind you need to give it some key and some kind of data.
+    # 4) Create new Class App/Example.php to bind to.
+    $container->bind('example', function () {
+        #5) Here we instantiate the example class.
+
+        # This key will resolve to what ever we provided here.
+        # allow with what ever configurations, constructors setters that we have to repeat
+        return new \App\Example('asadf');
+    });
+    //    ddd($container);
+
+    # Then when ever we needed it we can resolve that key
+    $example = $container->resolve('example');
+
+    //    ddd($example);
+
+    # then we instantly have our object, all set to go.
+    $example->go();
+});
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

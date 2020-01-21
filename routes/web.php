@@ -18,6 +18,30 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
+Route::get('/container', function () {
+    ###  This data usually goes to what is called a service provider.
+    # 1) Instantiate a container.
+    $container = new \App\Container();
+
+    # 2) If we want to store things we can use any method we want.
+    # 3) When you call bind you need to give it some key and some kind of data.
+    # 4) Create new Class App/Example.php to bind to.
+    $container->bind('example', function () {
+        #5) Here we instantiate the example class.
+        return new \App\Example();
+    });
+    //    ddd($container);
+
+    $example = $container->resolve('example');
+
+    //    ddd($example);
+
+    $example->go();
+});
+
+
+
 Route::get('/contact', function () {
     return view('contact');
 });
