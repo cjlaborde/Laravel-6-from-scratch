@@ -18,7 +18,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
+# Lessons 38
 Route::get('/container', function () {
     ###  This data usually goes to what is called a service provider.
     # 1) Instantiate a container.
@@ -39,6 +39,43 @@ Route::get('/container', function () {
 
     $example->go();
 });
+
+#Lesson 39 Automatically Resolve Dependencies
+/*
+app()->bind('example', function () {
+    # By providing filename `services.php` and key name `foo`
+    $foo = config('services.foo');
+    return new \App\Example($foo);
+});
+*/
+
+//app()->bind('example', function () {
+//    return new \App\Example();
+//});
+
+/*
+Route::get('/resolve', function () {
+//    $example = resolve(App\Example::class);
+    $example = app()->make(App\Example::class);
+    ddd($example);
+});
+*/
+# watch what happens when I simply ask for it.
+Route::get('/resolve', function (App\Example $example) {
+//    $example = app()->make(App\Example::class);
+    ddd($example);
+});
+
+//Route::get('/resolve', function () {
+//    $example = resolve('example');
+//
+//    ddd($example);
+//});
+
+
+Route::get('/pages', 'PagesController@home');
+
+
 
 
 

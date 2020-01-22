@@ -13,7 +13,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        # Here we being explicit on how to create Example.php
+//        app()->bind('App\Example', function () {
+            $this->app->singleton('App\Example', function () {
+            # build up our collaborator
+            $collaborator = new \App\Collaborator();
+
+            $foo = 'foobar';
+
+            # then we would pass the collaborator
+            return new \App\Example($collaborator , $foo);
+        });
     }
 
     /**

@@ -1,3 +1,39 @@
+
+- [Routing to Controllers](#routing-to-controllers)
+- [Setup a Database Connection](#setup-a-database-connection)
+- [Hello Eloquent](#hello-eloquent)
+- [Migrations 101](#migrations-101)
+- [Generate Multiple Files in a Single Command](#generate-multiple-files-in-a-single-command)
+- [Business Logic](#business-logic)
+- [Layout Pages](#layout-pages)
+- [Integrate a Site Template](#integrate-a-site-template)
+- [Set an Active Menu Link](#set-an-active-menu-link)
+- [Asset Compilation with Laravel Mix and webpack](#asset-compilation-with-laravel-mix-and-webpack)
+- [Render Dynamic Data](#render-dynamic-data)
+- [Render Dynamic Data: Part 2](#render-dynamic-data-part-2)
+- [Homework Solutions](#homework-solutions)
+- [The Seven Restful Controller Actions](#the-seven-restful-controller-actions)
+- [Restful Routing](#restful-routing)
+- [Form Handling](#form-handling)
+- [Forms That Submit PUT Requests](#forms-that-submit-put-requests)
+- [Form Validation Essentials](#form-validation-essentials)
+- [Leverage Route Model Binding](#leverage-route-model-binding)
+- [EXTRA:  look stuff up by either the ID or the slug](#extra-look-stuff-up-by-either-the-id-or-the-slug)
+- [Reduce Duplication](#reduce-duplication)
+- [Consider Named Routes](#consider-named-routes)
+- [Basic Eloquent Relationships](#basic-eloquent-relationships)
+- [Understanding Foreign Keys and Database Factories](#understanding-foreign-keys-and-database-factories)
+- [EXTRA: When User Deleted Set Articles as Guest Author.](#extra-when-user-deleted-set-articles-as-guest-author)
+- [Many to Many Relationships With Linking Tables](#many-to-many-relationships-with-linking-tables)
+- [Display All Tags Under Each Article](#display-all-tags-under-each-article)
+- [Attach and Validate Many-to-Many Inserts](#attach-and-validate-many-to-many-inserts)
+- [Build a Registration System in Mere Minutes](#build-a-registration-system-in-mere-minutes)
+- [The Password Reset Flow| How to See Laravel Under the hood.](#the-password-reset-flow-how-to-see-laravel-under-the-hood)
+- [Collections "Linking Together Laravel Collection.php methods"](#collections-%22linking-together-laravel-collectionphp-methods%22)
+- [CSRF Attacks, With Examples](#csrf-attacks-with-examples)
+- [Service Container Fundamentals](#service-container-fundamentals)
+- [Automatically Resolve Dependencies](#automatically-resolve-dependencies)
+
 ### Routing to Controllers
 1. php artisan make:controller PostsController
 
@@ -2075,55 +2111,343 @@ Route::get('/container', function () {
 });
 ```
 
+### Automatically Resolve Dependencies
+1. Laravel container is actually the app() itself
+2. in web.php
+```php
+app()->bind('example', function () {
+    return new \App\Example();
+});
+```
+3. Now we create Example class for it to work.
+4. Now we want to fetch the Example() container.
+5. 
+```php
+    Route::get('/resolve', function () {
+        $example = resolve('example');
+        
+        ddd($example);
+    });
+```
+6. Lets say we need to serve a service we created it in config/services.php `'foo' => 'value'`
+7. These usually important settings or keys for the application, lets we need this key to instantiate Example.php class.
+8. In Example.php in PHPStorm Choose Generate/Constructor
+```php
+class Example
+{
+    protected $foo;
+    
+    public function __construct($foo)
+    {
+        $this->foo = $foo;
+    }
+}
+```
+9. Now when instantiate Example.php
+10. If we did it manually we don't always want to read the config, find all the necessary parameters to
+construct this object.
+11. Instead we will declare is needed 1 time.
+```php
+    app()->bind('example', function () {
+        # By providing filename `services.php` and key name `foo`
+        $foo = config('services.foo');
+        return new \App\Example();
+    });
+```
+12. By providing filename `services.php` and key name `foo`
+13. Now read the `ddd($example)` to see we read the config file and that value was pass to our example instance.
+```php
+App\Example {#239 ▼
+  #foo: "value"
+}
+```
+14. So lets bring it back to what we had before. In Example.php comment all the code.
+15. In web.php
+```php
+app()->bind('example', function () {
+    return new \App\Example();
+});
+```
+16. Once again if we give it a refresh. We have our example Instance.
+```php
+App\Example {#239 ▼
+  #foo: "value"
+}
+```
+17. Now what if I didn't use 
+```php
+/*
+app()->bind('example', function () {
+    return new \App\Example();
+});
+*/
+```
+18. This is Strange we know this is a fresh application and we know we have not bound anything on the container
+19. Create a `App\Collaborator.php` class.
+20. Now our Example.php will depend on our Collaborator
+21. In Example.php type `protected $collaborate;`
+22. Then use in PHPStorm Generate->construct
+```php
+class Example
+{
+    protected $collaborator;
 
+    public function __construct(Collaborator $collaborator)
+    {
+        $this->collaborator = $collaborator;
+    }
+}
+```
+23. Test it to see that it works as well.
 
+24. What is going here? 
+    1. We told laravel that we want to make instance of example.
+    2. So Laravel look into it's server container.
+    3. And check in `web.php` Do we have anything in this key for this container `$example = resolve(App\Example::class);`
+    4. If it so that is what you want.
+    5. `App\Example::class` Then checks if this is an existing class in your application.
+    6. Then checks and there is an `Example.php` class. 
+    7. That is exactly what you want and it instantiate example.
+    8. Then it reads the constructor argument.
+25. 
+```php
+    protected $collaborator;
+    
+    # Then in order for this object to be created. It needs a collaborator.
+    public function __construct(Collaborator $collaborator)
+    {
+        $this->collaborator = $collaborator;
+    }
+```
+26. Then we look at `Collaborator` is that something we can instantiate
+27. Then it continues this process for every argument. `This something I can create?`
+28. Then this is something I can create?
+29. In this case with `Collaborator` sure!, since there is no specific, no configuration, values that would need to be provided by the user.
+30. So it's very easy to instantiate this automatically.
+31. `Laravel Automatically` creates a collaborator and pass it into example `Automatically` for you.
+32. In our route file, here we are resolving resolving example out of the container.
+```php
+    Route::get('/resolve', function () {
+        $example = resolve(App\Example::class);
+    
+        ddd($example);
+    });
+```
+33. Now if we want to match the app() instance
+```php
+    Route::get('/resolve', function () {
+        $example = app()->make(App\Example::class);
+    
+        ddd($example);
+    });
+```
+34. You get the exact same exact thing as before.
+```php
 
+App\Example {#273 ▼
+  #collaborator: App\Collaborator {#274}
+}
+```
+35. They are functionally identical.
+36. This works but watch what happens if  I simply ask for it.
+```php
+    Route::get('/resolve', function (App\Example $example) {
+    //    $example = app()->make(App\Example::class);
+        ddd($example);
+    });
+```
+37. Now I am exclusively asking it out of the container. I am simply asking for it.
+38. And still works
+```php
+    App\Example {#276 ▼
+      #collaborator: App\Collaborator {#277}
+    }
+```
+39. This is power of laravel in service container it those it for you automatically when you simply ask for it.
+40. When ever you using closure here or dedicated controllers.
+41. It's the same thing and your action you would requests, what you need.
+42. `php artisan make:controller PagesController`
+43. `Route::get('/pages', 'PagesController@home');` at web.php
+44.  Once again going to Request what I need.
+```php
+class PagesController extends Controller
+{
+    # once again going to Request what I need.
+    public function home(Example $example)
+    {
+        ddd($example);
+    }
+}
+```
+45. You would get the exact same thing
+```php
+    App\Example {#277 ▼
+      #collaborator: App\Collaborator {#278}
+    }
+```
+46. `home(Example $example)` We refer to this automatically resolution.
+47. If it can Laravel will automatically pass in what we need.
+48. However there will be situation to initiate an object. You will need something that laravel can't 
+```php
+namespace App;
 
+class Example
+{
 
+    protected $collaborator;
+    protected $foo;
+    # Laravel will try to help you out here. 
+    # 1) It will think ok you need collaborator
+    # 2) Looks  like I can instantiate collaborator
+    # 3) Then you need $foo there is no type associated with that so can't inspect that
+    # 4) Don't know if $foo a string, number or array.
+    # 5) Can't help you here. error: `BindingResolutionException`
+    public function __construct(Collaborator $collaborator, $foo)
+    {
+        $this->collaborator = $collaborator;
+        $this->foo = $foo;
+    }
+```
+49. You will get error `BindingResolutionException` Which means I don't know how and you have not instructed me how.
+50. So in situations like this you have to be implicit. 'web.php'
+```php
+# Here we being explicit on how to create Example.php
+app()->bind('App\Example', function () {
+    # build up our collaborator
+    $collaborator = new \App\Collaborator();
 
+    $foo = 'foobar';
 
+    # then we would pass the collaborator
+    return new \App\Example($collaborator , $foo);
+});
+```
+51. Now it will work Again.
+52. The key here is the order of operations.
+53.  when in our controller we try to request example
+```php
+class PagesController extends Controller
+{
+    # once again going to Request what I need.
+    public function home(Example $example)
+    {
+        ddd($example);
+    }
+```
+54. Do we have something with that key already in the container?
+```php
+app()->bind('App\Example', function () {
+    # build up our collaborator
+    $collaborator = new \App\Collaborator();
 
+    $foo = 'foobar';
 
+    # then we would pass the collaborator
+    return new \App\Example($collaborator , $foo);
+});
 
+```
+55. The answer is yes, it trigger this closure and return the results.
+56. How ever in case you have not found anything within that key that is when it moves to next step.
+57. It moves to is this string a Class? 
+58. Then let me see if I can build that automatically.
+59. We finish off to where we store this logic.
+60. As we already noted the typical location is a provider.
+61. Laravel includes a `AppServiceProvider.php` for you out of the box.
+62. so we will use register() method
+```php
+class AppServiceProvider extends ServiceProvider
+{
+    public function register()
+    {
+        # Here we being explicit on how to create Example.php
+        app()->bind('App\Example', function () {
+            # build up our collaborator
+            $collaborator = new \App\Collaborator();
 
+            $foo = 'foobar';
 
+            # then we would pass the collaborator
+            return new \App\Example($collaborator , $foo);
+        });
+    }
+```
+63. Then you get same thing again.
+```php
+    App\Example {#276 ▼
+      #collaborator: App\Collaborator {#275}
+      #foo: "foobar"
+    }
+```
+64. Another Alternative is
+```php
+    public function register()
+    {
+        # you have access to app() property on any provider.
+        $this->app()->bind('App\Example', function () {
+            # build up our collaborator
+            $collaborator = new \App\Collaborator();
 
+            $foo = 'foobar';
 
+            # then we would pass the collaborator
+            return new \App\Example($collaborator , $foo);
+        });
+    }
+```
+65. you have access to app() property on any provider. So Click on `use Illuminate\Support\ServiceProvider;`
+66. and see you already have access to `protected $app`
+67. still same results
+```php
 
+App\Example {#276 ▼
+  #collaborator: App\Collaborator {#275}
+  #foo: "foobar"
+}
+```
+68. Sometimes when you resolve something out of the container you don't want a new instance everytime.
+69. You want the same one. Not always but there situations where a singleton is what you want.
+```php
+    public function register()
+    {
+            $this->app->singleton('App\Example', function () {
+            $collaborator = new \App\Collaborator();
 
+            $foo = 'foobar';
+            return new \App\Example($collaborator , $foo);
+        });
+    }
+```
+70. with this singleton() no matter how many times you resolve example. You look at the exact example instance.
+71. Go back to pages controllers.
+72. `PagesController.php`
+```php
+class PagesController extends Controller
+{
+    # once again going to Request what I need.
+    public function home()
+    {
+//        ddd($example);
+        ddd(resolve('App\Example'), resolve('App\Example'));
+    }
+}
+```
+73. now if we use bind instead of slingleton
+```php
+    public function register()
+    {
+            $this->app->bind('App\Example', function () {
 
+            $collaborator = new \App\Collaborator();
 
+            $foo = 'foobar';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            # then we would pass the collaborator
+            return new \App\Example($collaborator , $foo);
+        });
+    }
+```
+74. each time you resolve it. It will construct a new object.
 
 
 
