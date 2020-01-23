@@ -33,6 +33,7 @@
 - [CSRF Attacks, With Examples](#csrf-attacks-with-examples)
 - [Service Container Fundamentals](#service-container-fundamentals)
 - [Automatically Resolve Dependencies](#automatically-resolve-dependencies)
+- [Laravel Facades Demystified](#laravel-facades-demystified)
 
 ### Routing to Controllers
 1. php artisan make:controller PostsController
@@ -2449,20 +2450,300 @@ class PagesController extends Controller
 ```
 74. each time you resolve it. It will construct a new object.
 
+### Laravel Facades Demystified
+> Now that you have a basic understanding of the service container, we can finally move on to Laravel facades, which provide a convenient static interface to all of the framework's underlying components. In this lesson, we'll review the basic structure, how to track down the underlying class, and when you might choose not to use them.
+1. How we normally output a view using the helper function `view()` Without a Facades
+```php
+    public function home()
+    {
+        # normal
+//        return view('welcome');
+        # with View Facade
+        return view('welcome');
+    }
+```
+2. Now with Facades
+```php
+use Illuminate\Support\Facades\View;
 
+    public function home()
+    {
+        # with View Facade
+        return View::make('welcome');
+```
 
+2. both `return view('welcome');` and `return View::make('welcome');` are the same it comes down to preferences.
+3. click on the View:: to see how the class works. You will not see `make()` method inside `Facades/View.php`
+4. No where to be found instead we see
+```php
+    protected static function getFacadeAccessor()
+    {
+        return 'view';
+    }
+```
+5. Now if you scroll up you will see some static method.
+`@method static \Illuminate\Contracts\View\View make(string $view, array $data = [], array $mergeData = [])`
+6. First you will see that View class is stored inside vendor directory
+7. `laravel6/vendor/laravel/framework/src/Illuminate/Support/Facades/View.php`
+8. In View>Appearance>Navigator Bar to see all the Facades included with the framework.
 
+<img src="./markdown-img/facade-navigator.png" width="500" height="500">
 
+9. There is tons of stuff here related to authentication, working with cache, Configuration, Sending mail, Notifications, Working with the Request, or Validator.
+10. Most of the framework is accessible through here.
+11. >These Facades provide what is exactly a static interface to underline components in the framework.
+12. They are a convenience you can reference without manually having to build up these objects and their dependencies changes.
+13. type `ViewFactor` in Ctrl + P then in site Structure Search Make  `public function make($view, $data = [], $mergeData = [])`
+14. `Ctrl` + `O` to find Method `make()` in PHPStorm
+15. You didn't had to instantiate the factory and didn't had to pass all dependencies that this object requires.
+16. You don't care about that you just want to make a view.                             
+17. This is what separates Facades in Laravel from a traditional static methods.
+18. Calling a static method for changing state is generally frowned on because if it globally accessibly and changing state you can end up with a house of spaghetti, and end up really hard to test.
+19. Even through you calling static method, is not the same thing, any of these facades are still entirely testable in the same way as if you injected it, the underline classes.
 
+20. Here we will use another example.
+```php
+class PagesController extends Controller
+{
+    # once again going to Request what I need.
+    public function home()
+    {
+        # normal
+//        return view('welcome');
+        # Alternative Using View Facade
+        return View::make('welcome');
+    }
+}
+```
 
+21. We going to fetch some item in the query string
+````php
+    public function home()
+    {
+        # We going to fetch some item in the query string
+        return request('name');
+    }
+````
+22. `http://laravel6.test/?name=john` the output going to be john
+23. Now using Facades
 
+```php
+    public function home()
+    {
+        # We going to fetch some item in the query string
+//        return request('name');
+        return Request::input('name');
+    }
+```
+24. Now lets look at Request Facade in `laravel6/vendor/laravel/framework/src/Illuminate/Support/Facades/Request.php`
+25. We don't see Facade defined here instead we see awakard getFacadeAccessor()
+```php
+    protected static function getFacadeAccessor()
+    {
+        return 'request';
+    }
+```
+26. But if we scroll up we can see lots of @method been referenced like ` * @method static string|array|null input(string|null $key = null, string|array|null $default = null)`
+27. If you notice all Facades have inside and reference `getFacadeAccessor()` method.
+28.  Each of these method will return a key that references a binding in the service container.
+```php
+    protected static function getFacadeAccessor()
+    {
+        return 'request';
+    }
+```
+29. We learned about this in previous lesson about Service Container.
+30. if we use `tinker` you already know we can bind any giving key into the container
+31. `app()->bind('key', function() { return 'here you go'; });`
+32. `resolve('key')` Now if we resolve key we get the key out of the container we get the corresponding value.
+33. We can say the binding for server container is called 'key' and that key corresponds to this result `'here you go'`
+34. Here for the Request Facade the binding and service container is called 'request'
+```php
+    protected static function getFacadeAccessor()
+    {
+        return 'request';
+    }
+```
+35.  resolve('request') in php `tinker` As you see links to ` Illuminate\Http\Request`
+```php
+>>> resolve('request')
+=> Illuminate\Http\Request {#59
+     +attributes: Symfony\Component\HttpFoundation\ParameterBag {#51},
+     +request: Symfony\Component\HttpFoundation\ParameterBag {#55},
+     +query: Symfony\Component\HttpFoundation\ParameterBag {#54},
+     +server: Symfony\Component\HttpFoundation\ServerBag {#52},
+     +files: Symfony\Component\HttpFoundation\FileBag {#47},
+     +cookies: Symfony\Component\HttpFoundation\ParameterBag {#50},
+     +headers: Symfony\Component\HttpFoundation\HeaderBag {#53},
+   }
+```
+36. `Illuminate\Http\Request` same as @see ` Illuminate\Http\Request`  @see directive in `Facades/Request.php`
+37. This @see directive refers to the underline classes
+38. When you say `\Request::input('foo')` This is a static interface that proxies to an underline class
+39. In this case the underline class is ` Illuminate\Http\Request` 
+40. If we Click on `Illuminate\Http\Request` we will find the input() method. Remember to checkmark `inherited members`
+```php
+    public function input($key = null, $default = null)
+    {
+        return data_get(
+            $this->getInputSource()->all() + $this->query->all(), $key, $default
+        );
+    }
+```
+41. Now lets review 'Facades/File.php' this Facade allow us to work with various files and directives.
+42. we can Read a File, Check if it writable, grab the extension, we can Copy or Move a file.
+43. Lets go to `public/index.php` which is the entry form for the framework.
+44. We will read file using the file system class.
+45. `tinker` lets get the content of a file using `get`
+46. there are many helpers functions we can use to get paths example
+#### Paths helper function:
+    1.`base_path` give use the Base path example `/laravel6/`  
+    2.`public_path` gives us the public path
+    3.`app_path`
+    4. `resource path`
+    
+47. We will use `File::get(public_path('index.php'))` To read our `index.php` file
+48. The `Facades/File.php` is not doing the work, it's only purpose is to proxy the calls. To the underline class.
+```php
+    protected static function getFacadeAccessor()
+    {
+        return 'files';
+    }
+```
+49. Here the key for the binding in Server container is named 'files' So we use `resolve('files)` and receive `=> Illuminate\Filesystem\Filesystem {#158}`
+50. and if you scroll up you feel see same output as `resolve('files`) in `@see \Illuminate\Filesystem\Filesystem`
+51. That means if you use `File::get()` and look at that Facades/File.php file. and you don't know where to go. Here you can see the underline class filesystem `@see \Illuminate\Filesystem\Filesystem`
+52. So you can visit that then look for your get() method. 
+```php
+    public function get($path, $lock = false)
+    {
+        if ($this->isFile($path)) {
+            return $lock ? $this->sharedGet($path) : file_get_contents($path);
+        }
 
+        throw new FileNotFoundException("File does not exist at path {$path}");
+    }
+```
+53. 
+```php
+    # File Facades
+    public function home()
+    {
+        # we going to read a file then output it as a response.
+       return File::get(public_path('index.php'));
+    }
+```
+54. What we going to do is injected through the method or through the constructor. You learned about this in the last lesson. Were we talk about automatic resolution.
+55. If we know the underlining class is the filesystem. `@see \Illuminate\Filesystem\Filesystem`
+56. Lets inject that or ask for it.
+```php
+    # File Facades
+    use Illuminate\Filesystem;   #Same as  ---> `@see \Illuminate\Filesystem\Filesystem`
+    public function home(Filesystem $file)
+    {
+        # we going to read a file then output it as a response.
+       return File::get(public_path('index.php'));
+    }
+```
+57. As you learned in pass lesson laravel will read this and pass the correct argument `Filesystem $file`
+58. Now we not using the Facade anymore and using $file->
+```php
+    public function home(Filesystem $file)
+    {
+        # we going to read a file then output it as a response
 
+         // return File::get(public_path('index.php'));
+         return $file->get(public_path('index.php'));
+    }
+```
+59. As you see both call the exact method `return File::get(public_path('index.php'));` and `return $file->get(public_path('index.php'));`
+60. But with Facade approach `return File::get(public_path('index.php'));` I don't have to create object on the fly, Don't have to inject it through the constructor.
+61. As a Result we end up with an exactly more  expressive and coerce syntax.
+```php
+    public function home()
+    {
+        # we going to read a file then output it as a response
+        return File::get(public_path('index.php'));
+    }
 
+```
+62. There are Facades for basically the entire framework.
+63. Now we will use Cache:: Facade.
+64. We will remember something in the Cache foo for 60 seconds, 'foobar'
+65. We will use Arrow function `Cache::remember('foo', 60, fn () => 'foobar');` Which is identical to 
+```php
+Cache::remember('foo', 60, function () {
+return 'foobar';
+});
+```
+66. Here we written foo to the cache, then now read from the cache.
+```php
+    public function home()
+    {
+        # fn() is arrow functions in PHP 7.4
+        #Here we written foo to the cache
+      Cache::remember('foo', 60, fn() => 'foobar');
 
+        # Read from the cache
+        return Cache::get('foo');
+    }
+    
+```
+67. We are using the Cache Facade to interact with `* @see \Illuminate\Cache\Repository`
 
+68. If you look there in Repository you will see the remember() method
+69. All this is a static interface that proxy to the underlining class.
+70. You wanted to work with Cache but didn't want to figure out how to construct the Cache inside `home()`
+71. and didn't want to request it with dependency injections `public function home(Cache )`
+72. Instead you instantly used it `Cache::`
+73. Warning this is convenient, yet be careful this convinience don't end up biting you.
+74. One of the benificts to defining all classes dependencies and the constructor is that it makes it clear what is required in order for this class to function.
+```php
+public function __construct()
+{
 
-
+}
+```
+75. But when you have laravel Facades `Cache::remember('foo', 60, fn() => 'foobar');` sprinkled on the class it blur things.
+76. If this class 300 lines long maybe you referencing 4-5 different facades and things start to get out of hand.
+77.  But you didn't really notice it because it was hidden under these underline methods.
+78. When you more explicit with your decencies it becomes more clear.
+79. if you look at contruct you can see there is 5-6-7 dependencies
+```php
+public function __construct()
+{
+    
+}
+```
+80. there is too much going on here and probably need to extract different class or collaborator.
+81. As of putting them in the various methods it makes it more difficult to see what dependencies your class has.
+82. For example there is no issue using the View helped method when ever is
+```php
+public function home()
+{
+    # 83. They both the same.
+    # 1)
+    return View::make('welcome');
+    # 2)
+    return view('welcome');
+}
+```
+83. No problem using 
+```php
+public function home()
+{
+    # 83. They both the same.
+    # 1)
+    return redirect('welcome');
+    # 2)
+    return Redirect::
+}
+```
+84. It depends on the scope of your project, conventions you are following. Where in the stack you referencing these classes.
+85. For example in the Model we probably not Reaching to Facades. We would not react for the Auth:: or Request:: facades
+86. Feels like the opposite direction.
+87. For Example I use File:: when I just want to read a file but when building a package I will inject it instead.
+88. This choice depends from experience.
 
 
 

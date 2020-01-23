@@ -14,9 +14,11 @@
 //Route::get('/posts/{post}', 'PostsController@show');
 
 
-Route::get('/', function () {
-    return view('welcome');
-});
+//Route::get('/', function () {
+//    return view('welcome');
+//});
+
+Route::get('/', 'PagesController@home');
 
 # Lessons 38
 Route::get('/container', function () {
