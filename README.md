@@ -2745,12 +2745,323 @@ public function home()
 87. For Example I use File:: when I just want to read a file but when building a package I will inject it instead.
 88. This choice depends from experience.
 
+### Service Providers are the Missing Piece
+1. Go to `vendor` directory where composer stores it dependencies, including laravel.
+2. The framework is divided into components.
+3. Each component example `vendor/laravel/framework/src/Illuminate/Filesystem` includes `FilesystemServiceProvider.php`
+4. Another example `vendor/laravel/framework/src/Illuminate/Cache` includes `CacheServiceProvider.php`
+5. Another example `vendor/laravel/framework/src/Illuminate/Validation` includes `ValidationServiceProvider.php`
+6. If you look for `laravel/ServiceProvider`
+7. > What example is a Service Provider?  It provides a Service to the Framework.
+8. As part of that may register keys to the service container.
+9. Or trigger some functionality after framework has been booted.
+10. Lets see how `FilesystemServiceProvider.php`  works.
+11. Any service provider can implement 2 methods `register()` and `boot`
+12. The `register()` method is to register keys into the container.
+```php
+    public function register()
+    {
+        $this->registerNativeFilesystem();
 
+        $this->registerFlysystem();
+    }
+```
+13. `registerNativeFilesystem` You are registering key called 'files'
+```php
+    protected function registerNativeFilesystem()
+    {
+        # singleton() means there should only be 1 instance of it.
+        $this->app->singleton('files', function () {
+            # if you resolve it you get new instance of Filesystem class.
+            return new Filesystem;
+        });
+    }
+```
+14. The `boot()` method would trigger after every single service provider have been register. You can think of it as a loop.
+15. You can think of it as a loop, 1) First the framework loops through all of it's providers, 
+16. You can see all providers are declared at laravel6/config/app.php
+```php
+    'providers' => [
 
+        /*
+         * Laravel Framework Service Providers...
+         */
+        Illuminate\Auth\AuthServiceProvider::class,
+        Illuminate\Broadcasting\BroadcastServiceProvider::class,
+        Illuminate\Filesystem\FilesystemServiceProvider::class
+    ]
+```
+17. Which is basically the framework itself.
+18. The framework will loop over `  'providers' => [` and for each one it will call register method
+```php
+    public function register()
+    {
+        $this->registerNativeFilesystem();
 
+        $this->registerFlysystem();
+    }
+```
+19. So each of these providers will register themselves with the framework. It will bind something within the `Service` container.
+20. That can later be used in reference() and resolve()
+21. Once every provider has been register it will do a second pass and it will call a boot() method on the provider.
+22. This will be your chance to trigger some kind of functionality with the insurance that all the over providers have been register.
+23. If you need to trigger some kind of functionality after framework has been register, this is the method you want.
+```php
+public function boot()
+{
 
+}
+```
+24. back on `Illuminate\Filesystem\FilesystemServiceProvider` 
+25. Here you trying to register `registerNativeFilesystem()`
+```php
+    public function register()
+    {
+        $this->registerNativeFilesystem();
+    }
+```
+26. for `FilesystemServiceProvider` we are registering bellow the key called `files` to the container
+```php
+    protected function registerNativeFilesystem()
+    {
+        $this->app->singleton('files', function () {
+            return new Filesystem;
+        });
+    }
+```
+27. That will result to new instance `new Filesystem;`
+28. That means if key called `file`. we can `resolve()` it using `tinker`
+```php
+>>> resolve('files')
+=> Illuminate\Filesystem\Filesystem {#158}
+```
+29. You can also use `app()` helper function same thing.
+```php
+>>> app('files')
+=> Illuminate\Filesystem\Filesystem {#158}
+```
+30. That means if you want to get some file to read you can use `app('files')->get(public_path('index.php'))` 
+31. As you see `resolve('files')` and `app('files')` are like a type of shortcut connection. where 'files' is a key that connect to an entire Filesystem Service.
+32. Basically 'files' = Illuminate\Filesystem\Filesystem.php and was declared as a key bellow in the `registerNativeFilesystem()`
+```php
+    protected function registerNativeFilesystem()
+    {
+        $this->app->singleton('files', function () {
+            return new Filesystem;
+        });
+    }
+```
+33. There is also a `Facades/File.php` As you see the key `files` is declared inside it. Same way it was register above in the Service provider.
+```php
+    protected static function getFacadeAccessor()
+    {
+        return 'files';
+    }
+```
+34. Later we learn we can resolve it with app('files') as well.
+35. You also learn in past lesson that facades is simply static interface with underlining class or component
+36. The `getFacadeAccessor` access method or any Facade will return the key 'files' in this case. That represents the binding in the container.
+```php
+    protected static function getFacadeAccessor()
+    {
+        return 'files';
+    }
+```
+37. Now  you know that if I use `File::get();` and reference method like `get()` That is not calling a `get()` method on the Facade `src/Illuminate/Support/Facades/File.php`
+38. As you learned in the last episode. That is actually resolving the underline class. Which is `@see \Illuminate\Filesystem\Filesystem`
+39. Here you will find the `get()` method `@see \Illuminate\Filesystem\Filesystem`
+```php
+    public function get($path, $lock = false)
+    {
+        if ($this->isFile($path)) {
+            return $lock ? $this->sharedGet($path) : file_get_contents($path);
+        }
 
+        throw new FileNotFoundException("File does not exist at path {$path}");
+    }
+```
+40. This is how `File::get()` works.
+41. Knowing how it works you can create your own `Facades`
+42. 1) Create class called `App/Example2.php`
+```php
+    namespace App;
+    
+    class Example2
+    {
+        public function handle()
+        {
+            die('it works');
+        }
+    }
+```
+43. 2) Create Facade that will proxy this class `App\ExampleFacade.php`
+```php
+<?php
+    namespace App;
+    
+    use Illuminate\Support\Facades\Facade;
+    
+    class ExampleFacade extends Facade
+    {
+    
+    }
+```
+44. 3) in PHPStorm `Alt` + `Insert` Generate>Overwrite Method> `getFacadeAccessor`
+```php
+namespace App;
 
+use Illuminate\Support\Facades\Facade;
+
+class ExampleFacade extends Facade
+{
+    protected static function getFacadeAccessor()
+    {
+        # will return a key to the container and we can define it as any string we want.
+        return 'example';
+    }
+
+}
+```
+45. But if we tried to use this `tinker`
+46. If I try to run `App\ExampleFacade::handle();` it will not work.
+47. We will get a binding resolution exception `Illuminate/Contracts/Container/BindingResolutionException with message 'Target class [example] does not exist.'`
+48. This is because laravel tried to resolve this for you. 
+49. It knows you using a Facade and know the ExampleFacade.php  and knows the `getFacadeAccesor()` has a name of 'example'
+50. But laravel looked into the container and there is nothing in there called `example`
+51. So it does not know what to do for you. So it throws a `BindingResolutionException`
+52. We can fix that by going to one of the existent ServiceProviders like Providers/AppServiceProvider.php
+53. Or Create your own `php artisan make:provider FromServiceProvider` 
+54. Or just include it with Providers/AppServiceProvider.php inside we see both `register()` and `boot()`
+55. In this case we will register in the container using `register()`
+```php
+    public function register()
+    {
+        # bind this key called `example` into the container, now we have key into the container
+        $this->app->bind('example', function () {
+            # if you resolve() it is going to return new instance of that example class.
+            return new Example2();
+        });
+    }
+```
+56. Now we can grab that key as part of the container. using `resolve()` or `app()` helper functions
+57. We use `tinker` again and use `resolve('example')` and `app('example')`
+```php
+>>> app('example');
+=> App\Example2 {#3042}
+```
+58. Then we have or Facade ExampleFacade.php
+````php
+    protected static function getFacadeAccessor()
+    {
+        # return this string. That represent the binding in the container
+        return 'example';
+    }
+````
+59. That means we should be able to use this Facade to Proxy to Example2.php class.
+60. You don't have to do this for every class, but there will be situations where it provides very clean interface.
+61. Or Entry point for not just for yourself but potentially others. That are using a package providers.
+62. So lets give that a shot `App\ExampleFacade` and proxy to the `handle()` method.
+```php
+>>> App\ExampleFacade::handle();
+it works⏎
+```
+63. In the real world there is a lot of registration that is neccesary in order to intiantiate the class.
+64. Sometimes you providing a configuration setting.
+65. Sometimes you need to provide API keys.
+66. So if you store that in the service container.
+67. Almost like factory, you only got to declare that information once.
+```php
+    public function register()
+    {
+        $this->app->bind('example', function () {
+            # pass API keys in settings there.
+//            return new Example2('api');
+            # Read from your config
+            return new Example2(config());
+        });
+    }
+```
+68. and you declare that instantiation once.
+69. From then on anytime you want to grab your Example2() class. With Necessary dependencies.
+70. You only got the reference the key 'example' in container.
+71. However if I were to remove this entirely and leave it empty.
+```php
+    public function register()
+    {
+
+    }
+```
+72. If a Facade is simply delegating or poxing ot another class.
+73. You also can just return the name of that class in ExampleFacade.php
+```php
+    protected static function getFacadeAccessor()
+    {
+        return Example::class;
+    }
+```
+74. We realize when Laravel tries to resolve something out of the container.
+75. It first check if you have exclusively bind something with that key in the container.
+76. Remember in this case that key will be something like `App\Example`
+```php
+    protected static function getFacadeAccessor()
+    {
+        return Example2::class; // App\Example
+    }
+```
+77. So it checks if you explicit bind something there? no.
+78. Next it checks if it a class? Because if it, laravel can construct that object for you, automatically.
+79. Now if we try one more time `tinker`
+```php
+>>> App\ExampleFacade::handle();
+it works⏎
+```
+80. Now you understand why.
+81 but Remember if you have constructor that accept an $apiKey Laravel not mind reader.
+82. All it sees here I need variable $apiKey you don't have anything bind to that so I don't know what to do.
+```php
+class Example2
+{
+    public function _construct($apiKey)
+    {
+
+    }
+    public function handle()
+    {
+        die('it works');
+    }
+}
+```
+83. So If you try try one more time. `tinker`
+84. This time not going to work. `App\ExampleFacade::handle();`
+85. You get once again `BindingResolutionException`
+86. Because Laravel could not understand the key in the container. Then realize it was a class, called Example2.
+87. Then look at the `_construct($apiKey)` argument. Then checks `$apiKey` something  I can pass for you?
+88. Can I build it up on the fly. Well laravel don't know what `$apiKey` is.
+89. Laravel Can't help you so you get `BindingResolutionException`
+```php
+    protected static function getFacadeAccessor()
+    {
+        return Example2::class;
+    }
+```
+87. So those the situations where you want to be explicit and bind to service container. Go to `AppServiceProvider`
+ ```php
+    public function register()
+    {
+        # Example::class is same as 'example` since it's still a string.
+        $this->app->bind(Example2::class, function () {
+            # return what ever is necessary
+            return  new Example2('api-key-here');
+        }); 
+    }
+```
+
+88. So we try it one more time. `tinker` it works yet again.
+```php
+    >>> App\ExampleFacade::handle();
+    it works⏎
+```
+89. The Term `Service Container` and `Service Provider` are the most confusing terms.
 
 
 
