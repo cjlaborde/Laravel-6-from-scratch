@@ -3200,7 +3200,20 @@ Content-Transfer-Encoding: quoted-printable
             </p>
         @endif
 ```
-
+### Simulate an Inbox using Mailtrap
+1. Make account at https://mailtrap.io/
+2. Write settings on .env
+```json
+MAIL_DRIVER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=FILLEMAILUSERNAMECODEHERE
+MAIL_PASSWORD=FILLPASSWORDCODEHERE
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS=admin@example.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+3. Send email and check your mailtrap inbox.
 
 
 
