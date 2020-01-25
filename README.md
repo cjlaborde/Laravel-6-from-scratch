@@ -3215,15 +3215,96 @@ MAIL_FROM_NAME="${APP_NAME}"
 ```
 3. Send email and check your mailtrap inbox.
 
+### Send HTML Emails Using Mailable Classes
+1. `php artisan`
+2. `php artisan make:mail`
+3. `php artisan help make:mail`
+4. `php artisan make:mail ContactMe`
+5. Go to `app/Mail/ContactMe.php` Here we will build the email
+6. here we can set the view that the ContactMe() class will use as it's view.
+```php
+    public function build()
+    {
+//        return $this->view('view.name');
+        return $this->view('emails.contact-me');
+    }
+```
+7. Create the view `emails/contact-me.blade.php`
+8. On `ContactController.php` Now instead of writing the subject and to in here we will send it to the ContactMe() class
+```php
+    Mail::to(request('email'))
+        ->send(new ContactMe());
+```
+9. Now Send email in the form again and check mailtrap
+10. Often you need to reference Data when sending an email, for example: data of current user or lesson user has yet to watch
+11. Some data that should be pass on the view we can do that the same way. In the `contact-me.blade.php`
+```blade
+<body>
+    <h1>It Works Again!</h1>
 
+    <p>It sounds like you want to hear more about {{ $topic }}</p>
+</body>
+```
+12. But this will not work we need to go to the `ContactMe.php` class.
+13. I am going to expect some kind of `$topic` on my view.
+14. Here is the thing about Mailable classes, any `public` property not `private` or `protected`
+15. Any property `public` value will instantly be available within the view.
+16. So if we going to pass data to the Mailer lets accept the topic and initialized.
+```php
+class ContactMe extends Mailable
+{
+    use Queueable, SerializesModels;
 
+    public $topic;
 
+    public function __construct($topic)
+    {
+        $this->topic = $topic;
+    }
 
+```
+17. Now we pass what is revelant and this is often the result of database query or something from a form. In `ContactController.php`
+18. In our case we will hardcode it on   `->send(new ContactMe('shirts'));`
+```php
+    public function store()
+    {
+        # we validate email first before allowing it to be submitted.
+        request()->validate(['email' => 'required|email']);
 
+        Mail::to(request('email'))
+            ->send(new ContactMe('shirts'));
 
+        return redirect('/contact')
+            ->with('message', 'Email sent!');
+    }
+```
+19. Send email again in the form and check mailtrap.
+20.  Now lets make the subject reflect that and use $topic as well. go to `Mail/ContactMe.php` which would be some type of string
+```php
+class ContactMe extends Mailable
+{
+    use Queueable, SerializesModels;
 
+    public $topic;
 
+    public function __construct(string $topic)
+    {
+        $this->topic = $topic;
+    }
 
+    public function build()
+    {
+        return $this->view('emails.contact-me')
+            ->subject('More information about ' . $this->topic);
+    }
+}
+```
+21. You can see there is a number of things we can reference here
+<img src="./markdown-img/MailableClassReferences.png" width="500" height="500">
+22. You can send for example email later in some point in the future.
+23. You can queue which means you not sending email as part of current request instead you are doing it in a more async way. 
+24. That way you can respond to the user as quickly as possible. Without forcing them for email to be send.
+25. There are other things you can reference here like attachments = [] all the useful stuff you may need.
 
 
 
