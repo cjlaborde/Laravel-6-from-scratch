@@ -12,6 +12,11 @@ class PagesController extends Controller
 {
     public function home()
     {
+        return view('welcome');
+    }
+
+    public function cache()
+    {
         # fn() is arrow functions in PHP 7.4
         #Here we written foo to the cache
       Cache::remember('foo', 60, fn() => 'foobar');

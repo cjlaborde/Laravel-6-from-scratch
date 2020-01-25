@@ -19,6 +19,7 @@
 //});
 
 Route::get('/', 'PagesController@home');
+Route::get('/cache', 'PagesController@cache');
 
 # Lessons 38
 Route::get('/container', function () {
@@ -80,10 +81,13 @@ Route::get('/pages', 'PagesController@home');
 
 
 
+//Route::get('/contact', function () {
+//    return view('contact');
+//});
 
-Route::get('/contact', function () {
-    return view('contact');
-});
+Route::get('/contact', 'ContactController@show');
+
+Route::post('/contact', 'ContactController@store');
 
 # Show the data in API from AJAX.
 //Route::get('/about', function () {
