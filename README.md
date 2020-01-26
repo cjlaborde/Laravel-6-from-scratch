@@ -3306,6 +3306,160 @@ class ContactMe extends Mailable
 24. That way you can respond to the user as quickly as possible. Without forcing them for email to be send.
 25. There are other things you can reference here like attachments = [] all the useful stuff you may need.
 
+### Send Email Using Markdown Templates
+1. To use markdown this time go to `ContactMe.php` and change it to markdown
+```php
+    public function build()
+    {
+//        return $this->view('emails.contact-me')
+        return $this->markdown('emails.contact-me')
+            ->subject('More information about ' . $this->topic);
+    }
+```
+2. then delete all contact-me.blade.php html content and replace it with
+```blade
+@component('mail::message')
+    # A Heading
+
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+
+    - A list
+    - goes
+    - here
+@endcomponent
+
+```
+3. Then test it again with Mailtrap
+4. If you check the HTML source in Mailtrap you will see you have all the HTML you would expect.
+5. A Few gotchas don't indent anything in the view if you using markdown, it will not render properly.
+6. There are also other components you can create like a mail button
+```markdown
+@component('mail::button', ['url' => 'https://laracasts.com'])
+    Visit Laracasts
+@endcomponent
+```
+7. When you call component think of same was as loading a view.
+8. when you use `mail::button` is same as loading 'emails.contact-me.view' but is loading a view that is inside the composer vendor instead.
+9. `mail::button` linking at `laravel6/vendor/laravel/framework/src/Illuminate/Mail/resources/views/html/button.blade.php`
+10. Send email again and check mailtrap to see email with button that links to website
+11. Notice email has Laravel at top. That points from Application name to change it go to.
+12. `confing/app` notice the app name is `'name' => env('APP_NAME', 'Laravel'),` Laravel.
+13. So lets overwrite `APP_NAME` in .env to `APP_NAME=Lararticles`
+14. When you create new `php artisan help make:mail`
+15. You got option to create a Markdown template.
+16. `php artisan make:mail Contact --markdown=emails.contact`
+17. `emails.contact` === `views/emails/contact.blade.php`
+18. check `Mail/Contact.php` and notice you have the same except now `markdown()` is used instead of `view()`
+```php
+    public function build()
+    {
+        return $this->markdown('email.contact');
+    }
+```
+19. Check `views/emails/contact.blade` Now the view use a Markdown template to get started.
+ ```markdown
+@component('mail::message')
+# Introduction
+
+The body of your message.
+
+@component('mail::button', ['url' => ''])
+Button Text
+@endcomponent
+
+Thanks,<br>
+{{ config('app.name') }}
+@endcomponent
+```
+20. Then in `ContactController.php` switch to Contact() instead of `ContactMe()` in the store method.
+```php
+        Mail::to(request('email'))
+            ->send(new Contact());
+```
+21. Now Again send email and check it on mailtrap
+
+#### Now we going to customize the emails- Publish any publishable assets from vendor packages
+1.That way your color and layout match your branding.
+2. We want to publish the assets to our own local project, so that we can modify them and tweat them on our own.
+3. `php artisan help vendor:publish` this is true for any package.
+4. You can check github to find the --tag for specific asset or you can use -all for all.
+5. For Laravel Mail `https://laravel.com/docs/5.8/mail#customizing-the-components`
+6. The tag is `php artisan vendor:publish --tag=laravel-mail` As you see it copy the view from the vendor to your project.
+```php
+▶ php artisan vendor:publish --tag=laravel-mail
+Copied Directory [/vendor/laravel/framework/src/Illuminate/Mail/resources/views] To [/resources/views/vendor/mail]
+Publishing complete.
+Publishing complete.
+```
+7. Now when ever you send email it will read from your project directory `/resources/views/vendor/mail`
+8. You can edit the structure of button for example by going to `/resources/views/vendor/mail/html/button.blade.php`
+9. Or if you just want to change the style go to `/resources/views/vendor/mail/html/themes/default.css`
+10. It's like twitter bootstrap were you have different colors for buttons.
+11. Lets use another color go to `/resources/views/vendor/mail/html/button.blade.php` change `primary` to `green`
+```blade
+{{--<a href="{{ $url }}" class="button button-{{ $color ?? 'primary' }}" target="_blank">{{ $slot }}</a>--}}
+<a href="{{ $url }}" class="button button-{{ $color ?? 'green' }}" target="_blank">{{ $slot }}</a>
+```
+12. Send email again and check mailtrap to see the new color of the button.
+13. Same will be true about header section. `/resources/views/vendor/mail/html/header.blade.php`
+```blade
+<tr>
+<td class="header">
+<a href="{{ $url }}">
+{{ $slot }}
+</a>
+</td>
+</tr>
+```
+14. has `class="header"` so go to `/resources/views/vendor/mail/html/themes/default.css` and change the design
+```css
+.header a {
+    color: black;
+    font-size: 19px;
+    font-weight: bold;
+    text-decoration: none;
+}
+```
+15. Send another email and check mailtrap again to see the changed header.
+16. We making changes to default.css but you may not want that, instead want to create your own theme.
+17. So to Create your own theme go to `/resources/views/vendor/mail/html/themes/laracasts.css` and create your own theme in this case is called `laracasts.css`
+18. Then paste default.css content into laracasts.css but change the header color to orange
+```css
+.header a {
+    color: orange;
+    font-size: 19px;
+    font-weight: bold;
+    text-decoration: none;
+}
+```
+19. Now we need to tell laravel we want to use this theme instead. Go to `config/mail.php`
+20. Look for `theme` and change `default` to `laracast`
+```php
+    'markdown' => [
+//        'theme' => 'default',
+        'theme' => 'laracast',
+
+        'paths' => [
+            resource_path('views/vendor/mail'),
+        ],
+    ],
+```
+21. You can even change the themes on they fly as you send your emails check laravel Mail docs for that
+22. Send mail and check on mailtrap to check is using orange text color as is set on our custom theme `laracast.css`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
