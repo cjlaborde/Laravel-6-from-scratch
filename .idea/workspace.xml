@@ -2,14 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5da7db77-2f1d-45a2-97bf-db4a9a80bcdf" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/resources/views/emails/contact-me-with-html.blade.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/views/vendor/mail/html/themes/laracasts.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/views/payment.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/ContactController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/ContactController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Mail/ContactMe.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Mail/ContactMe.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/mail.php" beforeDir="false" afterPath="$PROJECT_DIR$/config/mail.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/emails/contact-me.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/emails/contact-me.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/web.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -231,7 +227,7 @@
       <workItem from="1579758191529" duration="2598000" />
       <workItem from="1579810459757" duration="17781000" />
       <workItem from="1579886915420" duration="26491000" />
-      <workItem from="1579987524745" duration="5437000" />
+      <workItem from="1579987524745" duration="15497000" />
     </task>
     <servers />
   </component>
@@ -308,10 +304,10 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="11" y="162" width="1028" height="737" key="SettingsEditor/0.27.1920.1053@0.27.1920.1053" timestamp="1579758706257" />
-    <state x="242" y="284" width="810" height="540" key="StructurePopup" timestamp="1579825751655">
+    <state x="242" y="284" width="810" height="540" key="StructurePopup" timestamp="1580025871722">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="242" y="284" width="810" height="540" key="StructurePopup/0.27.1920.1053@0.27.1920.1053" timestamp="1579825751655" />
+    <state x="242" y="284" width="810" height="540" key="StructurePopup/0.27.1920.1053@0.27.1920.1053" timestamp="1580025871722" />
     <state x="181" y="281" width="664" height="544" key="find.popup" timestamp="1579723930931">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
@@ -320,9 +316,9 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="178" y="252" key="run.anything.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1579231362726" />
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1579920866953">
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1580025728709">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1579920866953" />
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1580025728709" />
   </component>
 </project>

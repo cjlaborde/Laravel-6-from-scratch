@@ -143,7 +143,9 @@ Route::put('/articles/{article}', 'ArticlesController@update');
 //Route::post('/articles/{article}', 'ArticlesController@update');
 
 
-
+# lesson 46
+Route::get('payments/create', 'PaymentsController@create')->middleware('auth');
+Route::post('payments', 'PaymentsController@store')->middleware('auth');
 
 Auth::routes();
 

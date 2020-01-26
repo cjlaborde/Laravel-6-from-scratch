@@ -3447,31 +3447,142 @@ Publishing complete.
 21. You can even change the themes on they fly as you send your emails check laravel Mail docs for that
 22. Send mail and check on mailtrap to check is using orange text color as is set on our custom theme `laracast.css`
 
+### Notifications Versus Mailables
+>So far in this chapter, we've exclusively reached for Mailable classes to send emails; however, there's an alternative approach that you might consider as well. A Notification class can be used to notify a user in response to some action they took on your website. The difference is in how the user is notified. Sure, we can send them an email, but we could also notify them via a text message, or Slack notification, or even as a physical post card!
 
+1. `laravel6.test/payments/create` however required logged in user.
+2. `Route::get('payments/create', 'PaymentsController@create')->middleware('auth');`
+3. `php artisan make:controller PaymentsController --resource`
+```php
+    public function create()
+    {
+        return view('payment');
+    }
+```
+4. `payment.blade.php`
+```blade
+@extends('layout')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+@section('content')
+    <div id="page" class="container">
+        <form method="POST" action="/payments">
+            @csrf
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Make Payment
+            </button>
+        </form>
+    </div>
+@endsection
+```
+5. When we click payment we send payment and fire off a `Notification` to the user, that the payment has been received.
+6. We need to create the route `Route::post('payments', 'PaymentsController@store')->middleware('auth');`
+7. Lets Create a notification for a payment that have been received `php artisan make:notification PaymentReceived`
+8. Now you will notice a new Directory named `Notifications` at `app/Notifications/PaymentReceived.php`
+9. You will come to the decision should this be a `Mail` or `Notification` ?
+10. The advantage to Notification is that you are notifying a user in respond to an action that took place in the website.
+11. Examples: 1) they close their account 2) make payment 3) They liked something. There are responses to actions that took place.
+12. Another advantage about Notifying them is that it can take many forms, does not have to only an email.
+13. But still uses the same API. You could 1) email then 2) Send them text messages 3) Notifying them on slack. 4) You can even pull in a supportive package to Send them a physical postcard.
+14. All of those method use the same notification API. While Traditional `Mail::` Facade only sends email.
+15. Now lets add it to the `store()` method in `PaymentsController.php`
+```php
+    public function store(Request $request)
+    {
+        # Notification is an alternative facade to Mail::
+        # send the notification to the person currently signed in
+        Notification::send(request()->user(), new PaymentReceived());
+    }
+```
+16. Now Check the `PaymentReceived()` at `app/Notifications/PaymentReceived.php`
+17. We can Queue it.
+```php
+class PaymentReceived extends Notification
+{
+    use Queueable;
+```
+18. You can check things through the constructor() as usual.
+19. Notice the delivery channels, you can have a notification that can be distributed in multiple ways. It could be mail, SMS notification, slack, postcard.
+```php
+    /**
+     * Get the notification's delivery channels.
+     *
+     * @param  mixed  $notifiable
+     * @return array
+     */
+    public function via($notifiable)
+    {
+        return ['mail'];
+    }
+```
+20. All of them could be represented here.
+21. For every different Channel we need someway to translate the notification to the proper format for the channel.
+22. For sending an email, we should know how should appear. Since a a text message will be different than full email. We need to have a way to represent that and that is what this is.
+23. Here we will use the MailMessage API to send the email.
+```php
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+                    # Email subject message
+                    ->subject('Your Laracasts Payment Was received')
+                    # Greeting is the headline
+                    ->greeting("What's Up?")
+                    # line represents the paragraph
+                    ->line('The introduction to the notification.')
+                    ->line('Lorem ipsum dolor sit amet, consectetur adipisicing elit.')
+                    # Represents the call to action button
+                    ->action('Sign Up', url('/'))
+                    # Another Paragraph
+                    ->line('Thanks!');
+    }
+```
+24. Press the `Make Payment` in `http://laravel6.test/payments/create`
+25. Check the email in mailtrap
+26. Making code more readable
+```php
+    public function store(Request $request)
+    {
+       # Notification::send(request()->user(), new PaymentReceived());
+        
+        # Alternative way but more readable
+        request()->user()->notify(new PaymentReceived());
+    }
+```
+27. If we check `User.php` we see it includes `use Notifiable` click on it to go to `Notifiable.php`
+```php
+trait Notifiable
+{
+    use HasDatabaseNotifications, RoutesNotifications;
+}
+```
+28. Click on `RoutesNotifications` Here the the 3 notification method we can call. `notify()`, `notifyNow()`, `routeNotificationFor()`
+29. We used `notify()` about with `request()->user()->notify(new PaymentReceived());`
+```php
+    public function notify($instance)
+    {
+        app(Dispatcher::class)->send($this, $instance);
+    }
+```
+30. This one is more useful if you looking to Notify a collection of users.
+```php
+    public function store(Request $request)
+    {
+        Notification::send(request()->user(), new PaymentReceived());
+    }
+```
+31. Now if you notifying a single user stick with this one.
+```php
+    public function store(Request $request)
+    {
+        request()->user()->notify(new PaymentReceived());
+    }
+```
+32. Is a lot more cleaner especially if you have user variable
+```php
+    public function store(Request $request)
+    {
+        $user->notify(new PaymentReceived());
+    }
+```
 
 
 
