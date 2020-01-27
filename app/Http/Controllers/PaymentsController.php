@@ -11,7 +11,7 @@ class PaymentsController extends Controller
     public function create()
     {
         # 1) When user clicks payment button in the view.
-        return view('payment');
+        return view('payments.create');
     }
 
     # 2) Will hit store method
@@ -21,9 +21,13 @@ class PaymentsController extends Controller
         # 4) Then will fire off this Notification `new PaymentReceived()`
         # Notification is an alternative facade to Mail::
         # send the notification to the person currently signed in
-        Notification::send(request()->user(), new PaymentReceived());
+//        Notification::send(request()->user(), new PaymentReceived());
 
         # Alternative way but more redeable
-        request()->user()->notify(new PaymentReceived());
+        request()->user()->notify(new PaymentReceived(900));
+
+        return redirect('notifications');
     }
 }
+
+

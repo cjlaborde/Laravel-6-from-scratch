@@ -146,6 +146,7 @@ Route::put('/articles/{article}', 'ArticlesController@update');
 # lesson 46
 Route::get('payments/create', 'PaymentsController@create')->middleware('auth');
 Route::post('payments', 'PaymentsController@store')->middleware('auth');
+Route::get('notifications', 'UserNotificationsController@show')->middleware('auth')->name('notifications');
 
 Auth::routes();
 

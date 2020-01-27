@@ -3583,7 +3583,477 @@ trait Notifiable
         $user->notify(new PaymentReceived());
     }
 ```
+### Database Notifications
+1. Currently we only using `mail` in PaymentReceived.php lets add other ones.
+2. Go to the documentation to see alternatives `https://laravel.com/docs/master/notifications`
+3. We will use Database Notifications `https://laravel.com/docs/master/notifications#database-notifications`
+4. Database Notification option is storing notification in the database then displaying it to user.
+5. An example is facebook notification alarm in the top.
+6.  If we going to use Database notifications we will need table to store it.
+```php
+php artisan notifications:table
 
+php artisan migrate
+```
+7. if we check data type notice it has some polymorph keys `notifiable_type` and `notifiable_id`
+8. You can check `create_notifications_table.php`
+```php
+    public function up()
+    {
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();              # random unique id
+            $table->string('type');                     # the type
+            $table->morphs('notifiable');               # polymorphic keys
+            $table->text('data');                       # column for data itself that will be json
+            $table->timestamp('read_at')->nullable();   # record when user read the notification
+            $table->timestamps();
+        });
+    }
+```
+9. Lets go to `PaymentsController.php`
+```php
+    public function store(Request $request)
+    {
+        request()->user()->notify(new PaymentReceived());
+    }
+```
+10. But now we will store it on the database but also send it as an email.
+11. So you can select one or many channels in `PaymentReceived.php`
+```php
+    public function via($notifiable)
+    {
+        return ['mail', 'database'];
+    }
+
+```
+12. Now go to `http://laravel6.test/payments` send mail and check mailtrap and the database.
+13. The type will be the `App\Notifications\PaymentReceived` path of the notification we have.
+14. The polymorph sections `notifiable_type` and `notifiable_id` is the thing we trying to notify. Also always will be a user but it doesn't have to be.
+15. The `data` is [] JSON data. Is empty since we need to populate it on `PaymentReceived.php`
+16. in `PaymentsController.php` we have have object as the data but we will hardcode the data instead.
+```php
+    public function store(Request $request)
+    {
+        # Alternative way but more redeable
+        request()->user()->notify(new PaymentReceived(900));
+    }
+```
+17. In real world instead of just `900` it would be object or something stored in database. Even could be the response from a stripe Hook.
+18. Now in the `PaymentReceived.php` we will accept the amount.
+```php
+    public function __construct($amount)
+    {
+        $this->amount = $amount;
+    }
+```
+19. Send email again and check database and see the `data` stores the amount in the array. `{"amount":900}`
+20. Now lets present this information to the user.
+21. Create new end point to view notification.Create new route. `Route::get('notifications', 'UserNotificationsController@show')->middleware('auth');`
+22. `php artisan make:controller UserNotificationsController`
+```php
+    public function show()
+    {
+        return view('notifications.show');
+    }
+```
+23. Create view at `/views/notifications/show.blade.php` then visit the page `http://laravel6.test/notifications`
+24. How to query database to show notifications?
+25. Is Easy you remember in last lesson every `User.php` uses the trait called `use Notifiable`
+```php
+class User extends Authenticatable
+{
+    use Notifiable;
+```
+26. Click Notifiable; to see the `trait`
+```php
+trait Notifiable
+{
+    use HasDatabaseNotifications, RoutesNotifications;
+}
+```
+27. Then click on `HasDatabaseNotifications`
+28. Here we have a relationship
+```php
+    public function notifications()
+    {
+        return $this->morphMany(DatabaseNotification::class, 'notifiable')->orderBy('created_at', 'desc');
+    }
+```
+29. We can even fetch notications that have been read, notice we still refer the notifications() above, its just adding a where clause to get only the notifications where the `read_at` column is not null. If it not null that means is been read.
+```php
+    public function readNotifications()
+    {
+        return $this->notifications()->whereNotNull('read_at');
+    }
+```
+30. Here you can do the inverse
+```php
+    public function unreadNotifications()
+    {
+        return $this->notifications()->whereNull('read_at');
+    }
+```
+31. We can see these notifications belong to a `user_id/notifiable_id`
+32. use `tinker` and find user `App\User::find(2);`
+```php
+=> App\User {#3053
+     id: 2,
+     name: "John",
+     email: "john@gmail.com",
+     email_verified_at: null,
+     created_at: "2020-01-20 01:01:32",
+     updated_at: "2020-01-20 04:11:50",
+   }
+
+```
+33. Now lets get the notifications from the user. `App\User::find(2)->notifications`
+```php
+=> Illuminate\Notifications\DatabaseNotificationCollection {#3056
+     all: [
+       Illuminate\Notifications\DatabaseNotification {#3061
+         id: "b7c8ae7a-860a-40bc-a996-9a9f68828f53",
+         type: "App\Notifications\PaymentReceived",
+         notifiable_type: "App\User",
+         notifiable_id: 2,
+         data: "{"amount":900}",
+         read_at: null,
+         created_at: "2020-01-27 00:48:21",
+         updated_at: "2020-01-27 00:48:21",
+       },
+     ],
+   }
+```
+34. Notice that each Notification here is an instance of `DatabaseNotification` 
+35. go to `DatabaseNotification.php` at `laravel6/vendor/laravel/framework/src/Illuminate/Notifications/DatabaseNotification.php`
+36. First we can mark a notification as read
+```php
+    public function markAsRead()
+    {
+        if (is_null($this->read_at)) {
+            $this->forceFill(['read_at' => $this->freshTimestamp()])->save();
+        }
+    }
+```
+37. Or unread
+```php
+    public function markAsUnread()
+    {
+        if (! is_null($this->read_at)) {
+            $this->forceFill(['read_at' => null])->save();
+        }
+    }
+```
+38. We can check if it has been read
+```php
+    public function read()
+    {
+        return $this->read_at !== null;
+    }
+```
+39. We also have method called notifiable() get the notifiable entity that the notification belongs to. In simple terms get the user that is been notifiable
+```php
+    public function notifiable()
+    {
+        return $this->morphTo();
+    }
+```
+40.  It does not have to be the user even through is usually is.
+41. For example we have our collection here. Lets grab the first one with `App\User::find(2)->notifications[0]`
+```php
+=> Illuminate\Notifications\DatabaseNotification {#3066
+     id: "b7c8ae7a-860a-40bc-a996-9a9f68828f53",
+     type: "App\Notifications\PaymentReceived",
+     notifiable_type: "App\User",
+     notifiable_id: 2,
+     data: "{"amount":900}",
+     read_at: null,
+     created_at: "2020-01-27 00:48:21",
+     updated_at: "2020-01-27 00:48:21",
+   }
+```
+42. Then lets get notifiable() `App\User::find(2)->notifications[0]->notifiable`
+43. This will get the user that is notified by this notification.
+```php
+=> App\User {#3062
+     id: 2,
+     name: "John",
+     email: "john@gmail.com",
+     email_verified_at: null,
+     created_at: "2020-01-20 01:01:32",
+     updated_at: "2020-01-20 04:11:50",
+   }
+```
+43. Lets return to `UserNotificationsController.php` lets add the notifications to the view from the database.
+```php
+    public function show()
+    {
+        return view('notifications.show', [
+//          'notifications' => auth()->user()->unread # check in  `laravel6/vendor/laravel/framework/src/Illuminate/Notifications/DatabaseNotification.php`
+            'notifications' => auth()->user()->notifications # we will show all notifications
+        ]);
+    }
+```
+44. Then we go to our `view/notifications/show.blade.php` to display them
+```php
+@extends('layout')
+
+@section('content')
+    <div id="page" class="container">
+        <ul>
+            @foreach($notifications as $notification)
+            <li> {{{ $notification->type }}} </li>
+            @endforeach
+        </ul>
+    </div>
+@endsection
+```
+45. result on page.
+```blade
+    App\Notifications\PaymentReceived
+    App\Notifications\PaymentReceived
+    App\Notifications\PaymentReceived
+```
+46. But having the path is not useful instead we want to show a message instead.
+```blade
+@section('content')
+    <div id="page" class="container">
+        <ul>
+            @foreach($notifications as $notification)
+            <li>
+                @if ($notification->type === 'App\Notifications\PaymentReceived')
+                    We have received a payment from you.
+                @endif
+            </li>
+            @endforeach
+        </ul>
+    </div>
+@endsection
+    
+```
+47. result on page.
+```blade
+    We have received a payment from you.
+    We have received a payment from you.
+    We have received a payment from you.
+```
+48. But what about specific data from `data` array.
+49. Now if we want to grab the `data` amount lets go to `DatabaseNotification.php` to see how
+50. So we are casting that data column to an array.
+```php
+    protected $casts = [
+        'data' => 'array',
+        'read_at' => 'datetime',
+    ];
+```
+50. Which means when I access notification data all the data inside will be available as keys of an array.
+```blade
+@extends('layout')
+
+@section('content')
+    <div id="page" class="container">
+        <ul>
+            @foreach($notifications as $notification)
+            <li>
+                @if ($notification->type === 'App\Notifications\PaymentReceived')
+                    We have received a payment of {{ $notification->data['amount'] }} from you.
+                @endif
+            </li>
+            @endforeach
+        </ul>
+    </div>
+@endsection
+```
+51. You can also calculate it so is in dollars `We have received a payment of ${{ $notification->data['amount'] / 100 }} from you.`
+52. Send payment to see if it works and check notification page.
+53. Now Notifications should be marked as read when you load the page.
+54. So go back to `UserNotificationsController.php` and extract the variable.
+```php
+    public function show()
+    {
+        return view('notifications.show', [
+//            'notifications' => auth()->user()->unread # check in  `/home/cjlaborde/Sites/laravel6/vendor/laravel/framework/src/Illuminate/Notifications/DatabaseNotification.php`
+            'notifications' => auth()->user()->notifications
+        ]);
+    }
+```
+55. Select `auth()->user()->notifications` ---> Generate ---> Introduce Variable
+```php
+    public function show()
+    {
+        $notifications = auth()->user()->notifications;
+        return view('notifications.show', [
+//            'notifications' => auth()->user()->unread # check in  `/home/cjlaborde/Sites/laravel6/vendor/laravel/framework/src/Illuminate/Notifications/DatabaseNotification.php`
+            'notifications' => $notifications
+        ]);
+    }
+```
+56. In this case we only want the unread notifications
+```php
+    public function show()
+    {
+        $notifications = auth()->user()->unreadNotifications;
+        return view('notifications.show', [
+//            'notifications' => auth()->user()->unread # check in  `/home/cjlaborde/Sites/laravel6/vendor/laravel/framework/src/Illuminate/Notifications/DatabaseNotification.php`
+            'notifications' => $notifications
+        ]);
+    }
+```
+57. Even through in other situations even if you read it you want to access it.
+58. But in this case we only grabbing the unread notifications
+59. We will use slow way to assume the notifications been read. Which is NOT Recommended.
+```php
+    public function show()
+    {
+        $notifications = auth()->user()->unreadNotifications;
+
+        foreach ($notifications as $notification )
+            $notification->markAsRead();
+        @endforeach
+
+        return view('notifications.show', [
+            'notifications' => $notifications
+        ]);
+    }
+```
+60. Problem with this one is that is it a lot of Database queries.
+61. So instead when you fetch the collection here. `$notifications = auth()->user()->unreadNotifications;` You actually getting a custom collection.
+62. It will be `DatabaseNotificationCollection.php` you will see it extends the normal collection `class DatabaseNotificationCollection extends Collection`
+63. But stacks on additional methods.
+```php
+class DatabaseNotificationCollection extends Collection
+{
+    public function markAsRead()
+    {
+        $this->each->markAsRead();
+    }
+
+    public function markAsUnread()
+    {
+        $this->each->markAsUnread();
+    }
+}
+```
+64. So that means I can use `markAsRead()` method
+```php
+    public function show()
+    {
+        $notifications = auth()->user()->unreadNotifications;
+
+           # Slow Way with multiple queries
+           /*
+            foreach ($notifications as $notification )
+                $notification->markAsRead();
+            @endforeach
+           */
+            #More efficient way using methods inside `DatabaseNotificationCollection`
+            $notifications->markAsRead();
+            
+        return view('notifications.show', [
+            'notifications' => $notifications
+        ]);
+    }
+```
+65. How the unreadNotifications works so each time a page load you don't see the Marked as Read Notifications.
+```php
+    public function show()
+    {
+        # 3) In Next pay load it will not show anything till a new notification comes in.
+        # 1) First we will fetch any unread notifications
+        $notifications = auth()->user()->unreadNotifications;
+
+        # Slow Way with multiple queries
+        /*
+         foreach ($notifications as $notification )
+             $notification->markAsRead();
+         @endforeach
+        */
+        #More efficient way using methods inside `DatabaseNotificationCollection`
+        # 2) But immediately we will update them in database.
+        $notifications->markAsRead();
+
+        return view('notifications.show', [
+//            'notifications' => auth()->user()->unread # check in  `/home/cjlaborde/Sites/laravel6/vendor/laravel/framework/src/Illuminate/Notifications/DatabaseNotification.php`
+            'notifications' => $notifications
+        ]);
+    }
+```
+66. Now Reload page and see the notifications not showing anymore.
+67. You want to display feedback instead of leaving page blank. We will also change `foreach` into `forelse` to be able to use `@empty` to show message when is empty.
+```blade
+    @extends('layout')
+    
+    @section('content')
+        <div id="page" class="container">
+            <ul>
+                @forelse($notifications as $notification)
+                <li>
+                    @if ($notification->type === 'App\Notifications\PaymentReceived')
+                        We have received a payment of ${{ $notification->data['amount'] / 100 }} from you.
+                    @endif
+                </li>
+                @empty
+    
+                    <li>You have no unread notification as this time.</li>
+                @endforelse
+            </ul>
+        </div>
+    @endsection
+```
+68. No Lets check it one more time, make new payment. Then reload notification page to see the no unread notifications message
+69. You can also divide Read and unread notifications in 2 different sections. One with Read and other with Unread.
+70. In this case we extracted a variable since we needed to extract method on it. But we still want to pass that original variable to the view.
+
+#### higher order tab
+
+1. So in this case laravel has useful thing we call higher order tab
+2. 
+```php
+
+class UserNotificationsController extends Controller
+{
+    public function show()
+    {
+        return view('notifications.show', [
+            # let say I want the user unread notifications, but also want to return a method on it that returns void if it does not return anything
+            # here is how we can handle that.
+            'notifications' => tap(auth()->unreadNotifications)->markAsRead()
+        ]);
+    }
+}
+```
+3. Send payment and reload notification page to see you get same function.
+4. What happens here `'notifications' => tap(auth()->unreadNotifications)->markAsRead()` 
+5. when you call tap function it accepts this value `auth()->unreadNotifications`
+6. and ultimately that is what will be returned from the tap functions
+```php
+    function tap($value, $callback = null)
+    {
+        if (is_null($callback)) {
+            # You also have ability to call additional methods on that object while still returning the original object below
+            return new HigherOrderTapProxy($value);
+        }
+
+        $callback($value);
+
+        # As you see here returning the original object.
+        return $value;
+    }
+}
+```
+7. This is useful on situations where you have variable and you want to call method on it but that method returns void.
+8. Just know what ever you pass the tap is what you get in return in the function.
+9. You can make it cleaner by Selecting `tap(auth()->user()->unreadNotifications)->markAsRead();` then in PHPStorm Refractor---> Introduce Variable
+```php
+    public function show()
+    {
+        $notifications = tap(auth()->user()->unreadNotifications)->markAsRead();
+        return view('notifications.show', [
+            # let say I want the user unread notifications, but also want to return a method on it that returns void if it does not return anything
+            # here is how we can handle that.
+            'notifications' => $notifications
+        ]);
+    }
+```
 
 
 
