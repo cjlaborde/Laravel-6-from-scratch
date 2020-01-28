@@ -2,14 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5da7db77-2f1d-45a2-97bf-db4a9a80bcdf" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/resources/views/notifications/show.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/laravel6.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/laravel6.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/PaymentsController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/PaymentsController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/Notifications/PaymentReceived.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Notifications/PaymentReceived.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/partials/navbar.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/partials/navbar.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/payment.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/payments/create.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/web.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/User.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/User.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/composer.json" beforeDir="false" afterPath="$PROJECT_DIR$/composer.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/composer.lock" beforeDir="false" afterPath="$PROJECT_DIR$/composer.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/services.php" beforeDir="false" afterPath="$PROJECT_DIR$/config/services.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -132,6 +133,23 @@
       <path value="$PROJECT_DIR$/vendor/sebastian/type" />
       <path value="$PROJECT_DIR$/vendor/vlucas/phpdotenv" />
       <path value="$PROJECT_DIR$/vendor/laravel/ui" />
+      <path value="$PROJECT_DIR$/vendor/nexmo/client" />
+      <path value="$PROJECT_DIR$/vendor/nexmo/laravel" />
+      <path value="$PROJECT_DIR$/vendor/nexmo/client-core" />
+      <path value="$PROJECT_DIR$/vendor/zendframework/zend-diactoros" />
+      <path value="$PROJECT_DIR$/vendor/lcobucci/jwt" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/psr7" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/promises" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/guzzle" />
+      <path value="$PROJECT_DIR$/vendor/laravel/nexmo-notification-channel" />
+      <path value="$PROJECT_DIR$/vendor/ralouphie/getallheaders" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-message" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-client" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-factory" />
+      <path value="$PROJECT_DIR$/vendor/php-http/guzzle6-adapter" />
+      <path value="$PROJECT_DIR$/vendor/php-http/promise" />
+      <path value="$PROJECT_DIR$/vendor/php-http/httplug" />
+      <path value="$PROJECT_DIR$/vendor/ocramius/package-versions" />
     </include_path>
   </component>
   <component name="ProjectConfigurationFiles">
@@ -234,6 +252,8 @@
       <workItem from="1579886915420" duration="26491000" />
       <workItem from="1579987524745" duration="15497000" />
       <workItem from="1580067845899" duration="21099000" />
+      <workItem from="1580148045526" duration="2500000" />
+      <workItem from="1580183855285" duration="5026000" />
     </task>
     <servers />
   </component>
@@ -310,10 +330,10 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="11" y="162" width="1028" height="737" key="SettingsEditor/0.27.1920.1053@0.27.1920.1053" timestamp="1579758706257" />
-    <state x="242" y="284" width="810" height="540" key="StructurePopup" timestamp="1580103986564">
+    <state x="242" y="284" width="810" height="540" key="StructurePopup" timestamp="1580187392063">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="242" y="284" width="810" height="540" key="StructurePopup/0.27.1920.1053@0.27.1920.1053" timestamp="1580103986564" />
+    <state x="242" y="284" width="810" height="540" key="StructurePopup/0.27.1920.1053@0.27.1920.1053" timestamp="1580187392063" />
     <state x="181" y="281" width="664" height="544" key="find.popup" timestamp="1579723930931">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
@@ -322,9 +342,9 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="178" y="252" key="run.anything.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1579231362726" />
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1580107025773">
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup" timestamp="1580187365399">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1580107025773" />
+    <state x="1067" y="259" width="672" height="678" key="search.everywhere.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1580187365399" />
   </component>
 </project>
