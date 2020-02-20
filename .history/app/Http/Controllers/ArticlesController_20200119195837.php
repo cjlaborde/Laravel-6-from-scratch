@@ -157,7 +157,6 @@ class ArticlesController extends Controller
         # you can attach or detach records on a pivot/linking table
         $article->tags()->attach(request('tags')); // [1,2,3]
 
-
         return redirect(route('articles.index'));
     }
 
