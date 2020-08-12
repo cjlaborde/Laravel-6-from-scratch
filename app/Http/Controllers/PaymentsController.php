@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ProductPurchased;
 use App\Notifications\PaymentReceived;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -14,6 +15,7 @@ class PaymentsController extends Controller
         return view('payments.create');
     }
 
+    /*
     # 2) Will hit store method
     public function store(Request $request)
     {
@@ -27,6 +29,24 @@ class PaymentsController extends Controller
         request()->user()->notify(new PaymentReceived(900));
 
         return redirect('notifications');
+    }
+    */
+
+    // Eventing Pros and Cons
+    public function store()
+    {
+        // process the payment
+        // unlock the purchase
+
+        /* Event */
+        // ProductrPurchased
+        ProductPurchased::dispatch('toy');
+        // event(new ProductPurchased('toy'));
+
+        /* Listeners */
+        // notify the user about the payment
+        // award achievments
+        // send shareable coupon to user
     }
 }
 

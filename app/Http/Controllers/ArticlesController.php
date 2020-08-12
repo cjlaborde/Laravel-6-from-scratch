@@ -145,6 +145,8 @@ class ArticlesController extends Controller
 //        return redirect(route('articles.index'));
 //    }
 
+
+
     public function store()
     {
         # build article and pass what I need from the request.
@@ -176,6 +178,7 @@ class ArticlesController extends Controller
     // Refactored edit method
     public function edit(Article $article)
     {
+        ddd($article);
         return view('articles.edit', compact('article'));
     }
 

@@ -29,7 +29,7 @@
 - [Attach and Validate Many-to-Many Inserts](#attach-and-validate-many-to-many-inserts)
 - [Build a Registration System in Mere Minutes](#build-a-registration-system-in-mere-minutes)
 - [The Password Reset Flow| How to See Laravel Under the hood.](#the-password-reset-flow-how-to-see-laravel-under-the-hood)
-- [Collections "Linking Together Laravel Collection.php methods"](#collections-%22linking-together-laravel-collectionphp-methods%22)
+- [Collections "Linking Together Laravel Collection.php methods"](#collections-linking-together-laravel-collectionphp-methods)
 - [CSRF Attacks, With Examples](#csrf-attacks-with-examples)
 - [Service Container Fundamentals](#service-container-fundamentals)
 - [Automatically Resolve Dependencies](#automatically-resolve-dependencies)
@@ -46,6 +46,9 @@
 - [Database Notifications](#database-notifications)
   - [higher order tab](#higher-order-tab)
 - [Send SMS Notifications in 5 Minutes](#send-sms-notifications-in-5-minutes)
+- [Eventing Pros and Cons](#eventing-pros-and-cons)
+  - [Make shareable coupon](#make-shareable-coupon)
+  - [Let laravel handle it for you by Overwriting the method](#let-laravel-handle-it-for-you-by-overwriting-the-method)
 
 ### Routing to Controllers
 1. php artisan make:controller PostsController
@@ -4119,3 +4122,328 @@ public function toNexmo($notifiable)
 12. Click make payment button, but you will get error. since you forgot to import `use Illuminate\Notifications\Messages\NexmoMessage;` in `PaymentReceived.php` 
 
 
+### Eventing Pros and Cons
+1. Here we have paymentsController.php
+2. When payment is proccessed what is the core actions.
+3. Like process the payment and unlock the purchase
+4. Yet there some side effects that may happen.
+5. Like notify user, send them email, sms message that payment has been proccessed.
+6. Also think about things that must take place to these important actions
+7. Another side effect is award achievments, like any 5 purchase you get new achievement in account 
+8. At some point it will inspect the user purchases and determine if they quality for this new achievment.
+9. Is not a primary action is a sideeffect
+10. Maybe future engament with user, like email 2 weeks from now. That includes a coupon.
+11. If you like the product here 20% coupon to share with a friend.
+12. Now you have to think how to structure it.
+13. The most simple one is doing it all line by line in procedure.
+14. The advantage is easier to understand if you come back a year from now.
+15. This is a great advantage of procedural code.
+16. Now the negative is that at some point it becomes very heavy and not easy to comsume.
+17. So now you think about other options like 
+18. create service class.
+19. use case class. (A class with a name that reflects what you are doing)
+20. What is the use case here? We are Purchasing a product.
+21. In that class you have various method that represent the many things that takes place.
+22. We will talk about event and listeners instead.
+23. Event represent action that just took place in your system.
+24. What is the event? ProductrPurchased
+25. So we fire event and notify entire system
+26. Then each of these can be their own classes that listen to event and response to how they need to.
+```php
+    // notify the user about the payment
+    // award achievments
+    // send shareable coupon to user
+```
+```php
+public function store()
+{
+
+    // process the payment
+    // unlock the purchase
+
+    /* Event */
+    // ProductrPurchased
+
+    /* Listeners */
+    // notify the user about the payment
+    // award achievments
+    // send shareable coupon to user
+}
+
+```
+
+27. See all laravel commands. `php artisan make:event` `php artisan make:listener`
+28. you cal also find some general event commandsa
+```php
+ event
+  event:cache          Discover and cache the application's events and listeners
+  event:clear          Clear all cached events and listeners
+  event:generate       Generate the missing events and listeners based on registration
+  event:list           List the application's events and listeners
+  ```
+29. `php artisan even:list` shows all events in your app. Along with their listener.
+30. Event when user register `Illuminate\Auth\Events\Registered`
+31. Send a notification with listener `Illuminate\Auth\Listeners\SendEmailVerificationNotification`
+32. Think of it as an if then relationship 
+33. If Event occurs then trigger the listener.
+34. You will find this is provided if you go to App/Providers/EventServiceProvider.php
+35. This the boostrap for every event in your application.
+36. We have an array that maps through all arrays.
+```php
+    protected $listen = [
+        Registered::class => [
+            SendEmailVerificationNotification::class,
+        ],
+    ];
+```
+37. lets make new event `php artisan make:event ProductPurchased
+38. `/app/Events/ProductPurchased.php`
+39. Inside ProductPurchased.php you will see a lot related to Braodcasting functionality.
+40. If you need a server side event to be broadcast to the client side so that it can be pick up by your javascript.
+41. Even through in many cases you would not need it and would be better if it was optional.
+42. We can clean it up and remove the broadcast features.
+```php
+namespace App\Events;
+
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+class ProductPurchased
+{
+    use Dispatchable, SerializesModels;
+
+    /**
+     * Create a new event instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        //
+    }
+}
+```
+43. An event class should repressent an action that has taken place in your system.
+44. Along with any data that goes along with it.
+45. It could be a Product model or $name to keep it simple.
+```php
+    public function __construct($name)
+    {
+        $this->name = $name;
+    }
+```
+46. You also want your event properties to be public.
+```php
+    public $name;
+```
+47. Now switch back to PaymentController.php and add the events.
+48. There are 2 ways and both are the same.
+```php
+
+    // Eventing Pros and Cons
+    public function store()
+    {
+        /* Event */
+        // ProductrPurchased
+        ProductPurchased::dispatch('toy');
+        event(new ProductPurchased('toy'));
+
+    }
+
+```
+49. `ProductPurchased::dispatch('toy');` all is it doing is delegating to event()
+50. `Sites/laravel6/app/Events/ProductPurchased.php` click on Dispatchable
+51. `vendor/laravel/framework/src/Illuminate/Foundation/Events/Dispatchable.php`
+```php
+    /**
+     * Dispatch the event with the given arguments.
+     *
+     * @return void
+     */
+    public static function dispatch()
+    {
+        return event(new static(...func_get_args()));
+    }
+```
+52. The event `ProductPurchased::dispatch('toy');` basically tell the system that event happened.
+53. Now the Listeners will listen and execute an action.
+54. `php artisan make:listener AwardAchievements`
+55. Now you have new listener directory `app/Listeners/AwardAchievements.php
+56. The handle() inside listen for some event
+```php
+    /**
+     * Handle the event.
+     *
+     * @param  object  $event
+     * @return void
+     */
+    public function handle(ProductPurchased $event)
+    {
+        //
+    }
+```
+57. Alternatively we can use command to do it for us. Lets delete the file.
+58. `php artisan make:listener AwardAchievements -e ProductPurchased`
+59. Now is added automatically.
+```php
+
+/**
+     * Handle the event.
+     *
+     * @param  ProductPurchased  $event
+     * @return void
+     */
+    public function handle(ProductPurchased $event)
+    {
+        //
+    }
+```
+60. Now we will test it with var_dump
+61. the $event class could have multiple properties.
+```php
+
+    /**
+     * Handle the event.
+     *
+     * @param  ProductPurchased  $event
+     * @return void
+     */
+    public function handle(ProductPurchased $event)
+    {
+        // $event->user
+        // $event->product
+        var_dump('check for new achievements');
+    }
+```
+62. Now we check page but it not showing the var_dump `http://laravel6.test/payments`
+63. Here is reason, yes you have event and yes you have listener.
+64. Yet we have not wired them together.
+65. Go back to `app/Providers/EventServiceProvider.php`
+66. Lets Register a new one.
+```php
+    protected $listen = [
+        //When this Occurs
+        ProductPurchased::class => [
+            // Then execute this
+            AwardAchievements::class
+        ]
+    ];
+```
+67. Now we see the output we put inside ProductPurchased
+```php
+app/Listeners/AwardAchievements.php:29:string 'check for new achievements' (length=26)
+app/Listeners/AwardAchievements.php:29:string 'check for new achievements' (length=26)
+```
+68. We handle core action in the ProductPurchased
+69. Then dispatched an event
+70. Then listen for that event
+71. Then we handle() a particular side effect.
+
+#### Make shareable coupon
+1. `php artisan make:listener SendShareableCoupon -e ProductPurchased`
+2. `app/Listeners/SendShareableCoupon.php`
+3. This will triger some logic notifying the user.
+```php
+    public function handle(ProductPurchased $event)
+    {
+        var_dump('send shareable coupon');
+    }
+ ```
+4. Go to `app/Providers/EventServiceProvider.php` and add service
+```php
+   protected $listen = [
+        Registered::class => [
+            SendEmailVerificationNotification::class,
+        ],
+        ProductPurchased::class => [
+            AwardAchievements::class,
+            SendShareableCoupon::class
+        ]
+    ];
+```
+5. Now Test it again.
+```php
+app/Listeners/AwardAchievements.php:29:string 'check for new achievements' (length=26)
+app/Listeners/SendShareableCoupon.php:29:string 'send shareable coupon' (length=21)
+```
+6. Now we have 2 side effects responding to an event.
+
+#### Let laravel handle it for you by Overwriting the method
+1. As you see we have core action example purchase in store method
+2. The announce to system by dispatch an event
+3. Then we listen for that event in Listeners and handle it with handle() method
+4. But it gets old having to maintain listener array in EventServiceProvider
+5. Is another thing to maintain and remember to do.
+6. Laravel can handle it for us.
+7. Lets delete
+```php
+  ProductPurchased::class => [
+      AwardAchievements::class,
+      SendShareableCoupon::class
+  ]
+```
+8. All we have to do is overwrite method called shouldDiscoverEvents
+```php
+    public function shouldDiscoverEvents()
+    {
+        return parent::shouldDiscoverEvents(); // TODO: Change the autogenerated stub
+    }
+ ```
+9. If you click shouldDiscoverEvents() You will see laravel is not going to do it.
+```php
+    /**
+     * Determine if events and listeners should be automatically discovered.
+     *
+     * @return bool
+     */
+    public function shouldDiscoverEvents()
+    {
+        return false;
+    }
+```
+10. So we overwrite it to true on EventServiceProvider on the function we added with overwrite
+```php
+    public function shouldDiscoverEvents()
+    {
+        return true;
+    }
+```
+11. Now Laravel will automatically scan Listener directory and will read classes inside
+12. Then will look for any handle method along with event
+13. Then will read associated event class `public function handle(ProductPurchased $event)`
+14. So it will automatically build up that listener array.
+15. Now test it again and see it works correctly.
+```php
+app/Listeners/SendShareableCoupon.php:29:string 'send shareable coupon' (length=21)
+app/Listeners/AwardAchievements.php:29:string 'check for new achievements' (length=26)
+
+```
+16. Problem is that before you could see the connections.
+17. But now since you removed you don't see them
+18. But you can use commands to see them `php artisan event:list
+```
+▶ php artisan event:list
++-----------------------------------+-------------------------------------------------------------+
+| Event                             | Listeners                                                   |
++-----------------------------------+-------------------------------------------------------------+
+| App\Events\ProductPurchased       | App\Listeners\SendShareableCoupon@handle                    |
+|                                   | App\Listeners\AwardAchievements@handle                      |
+| Illuminate\Auth\Events\Registered | Illuminate\Auth\Listeners\SendEmailVerificationNotification |
++-----------------------------------+-------------------------------------------------------------+
+```
+19. Now I can see when Event ProductPurchased event happens I can see the 2 listeners that take place.
+20. You can also do a search for `handle(ProductPurchased)`
+21. you can use Ctrl + Shift + F to look for files in PhpStorm
+22. Do Other thing when product is purchased.
+23. `▶ php artisan make:listener DoOtherThing -e ProductPurchased`
+24. So we did it all easily with 1 line of code.
+25. Its more solid, test it again
+```php
+app/Listeners/DoOtherThing.php:29:string 'Do other thing' (length=14)
+app/Listeners/SendShareableCoupon.php:29:string 'send shareable coupon' (length=21)
+app/Listeners/AwardAchievements.php:29:string 'check for new achievements' (length=26)
+```
+
+## Authorization
+
+    

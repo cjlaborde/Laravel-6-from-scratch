@@ -19,7 +19,7 @@ class PagesController extends Controller
     {
         # fn() is arrow functions in PHP 7.4
         #Here we written foo to the cache
-    //   Cache::remember('foo', 60, fn() => 'foobar');
+      Cache::remember('foo', 60, fn() => 'foobar');
 
         # Read from the cache
         return Cache::get('foo');
