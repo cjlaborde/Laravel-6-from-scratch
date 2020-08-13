@@ -5062,9 +5062,121 @@ class Reply extends Model
         </header>
 ```
 
+### Authorization Filters
+> What if I am the administrator and own this site and want to have power to choose best reply from any thread.
+1. We will use authorization hooks
+2. Go to ConversationPolicy and add a before() method
+3. This will fire before the update() method
+4. You can check    if ($user->roles()) or check id alternatively a column with Admin or User.
+5. We will check id instead.
+```php
+class ConversationPolicy
+{
+    use HandlesAuthorization;
 
+    public function before(User $user)
+    {
+        // if ($user->roles())
+        if ($user->id === 1) {
+            return true;
+        }
 
+    }
+    public function update(User $user, Conversation $conversation)
+    {
+        return $conversation->user->is($user);
+    }
+}
+```
+6. Now since my id is Admin I have full authorization.
+7. Make sure it has a condition don't simply return.
+```php
+   public function before(User $user)
+    {
+        if ($user->id === 1) {
+            return true;
+        }
+        // do not simply return
+        // return $user->id === 1;
+    }
+```
+8. Because it will never call the update method
+```php
+    public function before(User $user)
+    {
+        // if ($user->id === 2) {
+        //     return true;
+        // }
+        return $user->id === 1;
+    }
 
+    public function update(User $user, Conversation $conversation)
+    {
+        dd('hello');
+        return $conversation->user->is($user);
+    }
+
+```
+9. Now if we comment the return in before, the dd('hello') will run
+10. Because I return in the before() method it never moves to update() which is the next step.
+11. Since the result of before() is always assumed to be the response.
+12. This is why we should have an if condition to return in the before() method.
+13. Now lets make the if statement fail by providing wrong id.
+14. It will execute the dd('hello');
+```php
+    public function before(User $user)
+    {
+        if ($user->id === 2) {
+            return true;
+        }
+    }
+
+    public function update(User $user, Conversation $conversation)
+    {
+        dd('hello');
+        return $conversation->user->is($user);
+    }
+
+```
+15. There is also after() if you need to
+```php
+    public function after(User $user)
+    {
+        if ($user->id === 2) {
+            return true;
+        }
+    }
+```
+16. For situations checking administrator I don't want to do this for every single policy.
+17. So why we don't move up a level and handle it globaly.
+18. Remove the before()
+```php
+class ConversationPolicy
+{
+    use HandlesAuthorization;
+
+    // public function before(User $user)
+    // {
+    //     if ($user->id === 3) {
+    //         return true;
+    //     }
+    // }
+```
+18. Go to AuthServiceProvider
+19. Now create Gate
+```php
+    public function boot()
+    {
+        $this->registerPolicies();
+
+        Gate::before(function (User $user) {
+            if ($user->id === 2) { // admin
+                return true;
+            }
+         });
+    }
+```
+20. Now test it, if user id is the one you wrote it will instanly retrn true allowing you to choose best reply in any thread.
 
 
 

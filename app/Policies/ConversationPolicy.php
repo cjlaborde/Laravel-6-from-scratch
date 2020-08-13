@@ -10,6 +10,12 @@ class ConversationPolicy
 {
     use HandlesAuthorization;
 
+    // public function before(User $user)
+    // {
+    //     if ($user->id === 3) {
+    //         return true;
+    //     }
+    // }
 
     /**
      * Determine whether the user can update the conversation.
