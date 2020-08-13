@@ -4445,5 +4445,681 @@ app/Listeners/AwardAchievements.php:29:string 'check for new achievements' (leng
 ```
 
 ## Authorization
+### Limit Access to Authorized Users
+1. Authorization in laravel is easy.
+2. Here we have list of conversation and each other we can review the body. 
+3. We have 2 route setup
+```php
+ Route::get('conversations', 'ConversationsController@index');// that show all conversations
+ Route::get('conversations/{conversation}', 'ConversationsController@show'); // single conversation
+```
+6. with controllers
+```php
+    public function index()
+    {
+        return view('conversations.index', [
+            'conversations' => Conversation::all()
+        ]);
+    }
 
-    
+    public function show(Conversation $conversation)
+    {
+        return view('conversations.show', [
+            'conversations' => $conversation
+        ]);
+    }
+ ```
+ 7. To display all conversation we iterate over a collection
+ 8. For each one we out the title
+```php
+@extends('layouts.app')
+
+@section('content')
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                @foreach ($conversations as $conversation)
+                    <h2><a href="/conversations/{{ $conversation->id}}"> {{$conversation->title}} </a></h2>
+                    @continue($loop->last)
+                    <hr>
+                @endforeach
+            </div>
+        </div>
+    </div>
+@endsection
+```
+9. To Display a single Conversation
+```php
+@extends('layouts.app')
+
+    @section('content')
+        <p>
+            <a href="/conversations">Back</a>
+        </p>
+        // The title
+        <h1>{{ $conversation->title }}</h1>
+
+        // Who was written by
+        <p class="text-muted">Posted by {{ $conversation->user->name }}</p>
+
+        <div>
+            {{ $conversation->body }}
+        </div>
+
+        <hr>
+
+        // Collection of Replies
+        @include ('conversations.replies')
+    @endsection
+```
+10. Now the creator of conversation can choose any reply as the best answer and best reply.
+11. We need to allow it with eloquent
+12. Also needs an autherization level.
+13. We can't allow any person mark reply as best.
+14. Only The owner and creator of the thread has permission or is authorized to do that.
+15. You have to save id of the best reply.
+```php
+    public function up()
+    {
+        Schema::create('conversations', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('user_id');
+            $table->string('title');
+            $table->text('body');
+            // Save id of the best reply, yet is nullable since is not require to have one.
+            $table->unsignedBigInteger('best_reply_id')->nullable();
+            $table->timestamps();
+        });
+    }
+```
+16. `php artisan migrate:fresh`
+
+#### Lets build the other parts of the app.
+1. app/Conversation.php:
+```php
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Conversation extends Model
+{
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+
+    public function replies() {
+        return $this->hasMany(Reply::class);
+    }
+}
+```
+2. `php artisan make:model Reply -mc`
+
+3. app/Reply.php
+```php
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Reply extends Model
+{
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+}
+```
+4. app/User.php
+```php
+namespace App;
+
+class User extends Authenticatable
+{
+    public function conversations() {
+        return $this->hasMany(Conversation::class);
+    }
+
+    public function replies() {
+        return $this->hasMany(Reply::class);
+    }
+}
+```
+
+5. resources/views/conversations/index.blade.php
+```php
+@section('content')
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                @foreach ($conversations as $conversation)
+                    <h2><a href="/conversations/{{ $conversation->id}}"> {{$conversation->title}} </a></h2>
+                    @continue($loop->last)
+                    <hr>
+                @endforeach
+            </div>
+        </div>
+    </div>
+@endsection
+```
+6. resources/views/conversations/replies.blade.php
+```php
+@foreach ($conversation->replies as $reply)
+    <div>
+        <p class="m-0"><strong>{{$reply->user->name}} said...</strong></p>
+
+        {{$reply->body}}
+    </div>
+
+    @continue($loop->last)
+    <hr>
+@endforeach
+```
+
+
+7. database/factories/ConversationFactory.php
+```php
+/** @var \Illuminate\Database\Eloquent\Factory $factory */
+
+use App\Conversation;
+use Faker\Generator as Faker;
+
+$factory->define(Conversation::class, function (Faker $faker) {
+
+    $user = App\User::orderByRaw('RAND()')->first();
+
+    return [
+        'user_id' => $user->id,
+        'title' => $faker->sentence,
+        'body' => $faker->text,
+    ];
+});
+```
+
+8. `php artisan make:factory ConversationFactory -m "Conversation"`
+
+9. database/factories/ConversationFactory.php
+```php
+/** @var \Illuminate\Database\Eloquent\Factory $factory */
+
+use App\Conversation;
+use Faker\Generator as Faker;
+
+$factory->define(Conversation::class, function (Faker $faker) {
+
+    $user = App\User::orderByRaw('RAND()')->first();
+
+    return [
+        'user_id' => $user->id,
+        'title' => $faker->sentence,
+        'body' => $faker->text,
+    ];
+});
+```
+10. `php artisan make:factory ReplyFactory -m "Reply"`
+```php
+use App\Reply;
+use Faker\Generator as Faker;
+
+$factory->define(Reply::class, function (Faker $faker) {
+    $user = App\User::orderByRaw('RAND()')->first();
+    $conversation = App\Conversation::orderByRaw('RAND()')->first();
+
+    return [
+        'user_id' => $user->id,
+        'conversation_id' => $conversation->id,
+        'body' => $faker->sentence,
+    ];
+});
+```
+11. the replies migration file:
+```php
+    public function up()
+    {
+        Schema::create('replies', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('conversation_id');
+            $table->text('body');
+            $table->timestamps();
+
+
+            $table->foreign('user_id')
+            ->references('id')
+            ->on('users')
+            ->onDelete('cascade');
+
+            $table->foreign('conversation_id')
+            ->references('id')
+            ->on('conversations')
+            ->onDelete('cascade');
+        });
+    }
+```
+
+12. conversations seeder file: (run this command to generate)
+13. `php artisan make:seeder ConversationsSeeder`
+```php
+class ConversationsSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        factory(App\User::class, 5)->create();
+        factory(App\Conversation::class, 5)->create();
+        factory(App\Reply::class, 15)->create();
+    }
+}
+```
+14. php artisan migrate
+15. php artisan db:seed --class=ConversationsSeeder
+
+
+#### Add best reply
+1. Create a form and add @can
+2. If current user can update-conversation only on that condition should we display the form.
+```php
+     @can ('update-conversation', $conversation)
+         <form action="">
+             <button type="submit" class="btn p-0 text-muted">Best Reply?</button>
+         </form>
+     @endcan
+```
+3. update-conversation is not defined so no user will be able to see it.
+4. Now go to Providers and open AuthServiceProvider.php
+5. Register any authentication / authorization services.
+6. Now we will create gate in boot()
+7. When you use a Gate is sort of creating a gate between the user and some action that they may want to perform.
+```php
+    /**
+     * Register any authentication / authorization services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        $this->registerPolicies();
+        // When you use gate you sof
+        Gate::define('update-conversation', function (User $user, Conversation $conversation) {
+            
+        })
+    }
+```
+8. It's going to accept the current authenticated user, and we pass the conversation.
+```php
+@can ('update-conversation', $conversation)
+```
+9. Now if we just return true that is equally unhelpful since now everyone can see it, except not logged in users.
+```php
+    public function boot()
+    {
+        $this->registerPolicies();
+        Gate::define('update-conversation', function (User $user, Conversation $conversation) {
+            return true;
+        });
+    }
+```
+10. It assumes you have a valid user otherwise returns false.
+11. You can also make user Optiontal with ? we want user but not mandatory.
+```php
+    public function boot()
+    {
+        $this->registerPolicies();
+        Gate::define('update-conversation', function (?User $user, Conversation $conversation) {
+            return true;
+        });
+    }
+```
+12. You can update conversation if it was written by you
+13. you can check this with Conversation model
+```php
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+```
+14. Get the user who wrote conversation and if that is the currently logged in user then you are authorized.
+```php
+    public function boot()
+    {
+        $this->registerPolicies();
+        Gate::define('update-conversation', function (User $user, Conversation $conversation) {
+            return $conversation->user->is($user);
+        });
+    }
+```
+15. Now check article wrote by you and now you can see the best reply button.
+16. First you define the key in AuthServiceProvider.php 'update-conversation'
+17. Then you can reference that key in your views.
+18. Yes we can hide button, but that will not someone from manually doing a push request and we can not allow that.
+19. Now we add method and action to form
+```php
+
+        @can ('update-conversation', $conversation)
+            <form method="POST" action="/best-replies/{{ $reply->id }}">
+                @csrf
+                <button type="submit" class="btn p-0 text-muted">Best Reply?</button>
+            </form>
+        @endcan
+```
+20. Then we create post route.
+21. If we can't use one of the standards action names like index show create update destroy
+22. I will instead create a new controller and return one of those actions name
+23. Since  I named more specific I can return to a standard store() action there.
+```php
+Route::post('best-replies/{reply}', 'ConversationBestReplyController@store');
+```
+24. `php artisan make:controller ConversationBestReplyController`
+25. What we plan to do in ConversationBestReply store method
+```php
+class ConversationBestReplyController extends Controller
+{
+    public function store(Reply $reply )
+    {
+        // authorize that the current user has permission to set the best reply 
+        // for the conversation
+
+        // then set it 
+
+        // redirect back to the conversation page
+
+    }
+}
+```
+26. How do we get conversation since we only got a reply in this case?
+27. A reply is connected to conversation in the Modal Reply
+```php
+    public function conversation()
+    {
+        return $this->belongsTo(Conversation::class);
+    }
+```
+29. That is really the thing we are authorizing, not the reply but conversation
+30. Finish writing store method code.
+```php
+    public function store(Reply $reply )
+    {
+        // authorize that the current user has permission to set the best reply 
+        // for the conversation
+        $this->authorize('update-conversation', $reply->conversation);
+        
+        // then set it 
+        $reply->conversation->best_reply_id = $reply->id;
+        $reply->conversation->save();
+
+        // redirect back to the conversation page
+        return back();
+    }
+```
+31. Now test it and press best reply then check database
+32. You can use  $this->authorize helper yet notice that under the hood is using Gate class.
+```php
+    public function authorize($ability, $arguments = [])
+    {
+        [$ability, $arguments] = $this->parseAbilityAndArguments($ability, $arguments);
+
+        return app(Gate::class)->authorize($ability, $arguments);
+    }
+```
+33. So we can also handle it using Gate class
+34. $this->authorize is not unique is delegating to same Gate fasade
+```php
+    public function store(Reply $reply )
+    {
+       if (Gate::denies('update-conversation', $reply->conversation)) {
+            die('hangle it this way');
+        }
+
+                
+        // then set it 
+        $reply->conversation->best_reply_id = $reply->id;
+        $reply->conversation->save();
+
+        // redirect back to the conversation page
+        return back();
+
+    }
+```
+35. Usually use authorize unless you need special control over it.
+36. Now remove @can from the form
+```html
+        {{-- @can ('update-conversation', $conversation) --}}
+            <form method="POST" action="/best-replies/{{ $reply->id }}">
+                @csrf
+                <button type="submit" class="btn p-0 text-muted">Best Reply?</button>
+            </form>
+        {{-- @endcan --}}
+```
+37. Test if you can click best reply on posts that are not yours.
+38. Result is 403 This action is unauthorized. So is working correctly.
+39. Now brinck back the @car in replies
+
+#### Policies
+> Policy is a class that encapsulates an authorization policy for a model. So when ever you can see conversation, edit it, update it, view it. All this can be contained here.
+1. It may turn out that saving all your authorization logic in the server provider AuthServiceProdiver.php
+2. Becomes overwhelming, quickly to get so long.
+3. Unless you building a fairly simple application. Another option is reach for policies classes.
+4. php artisan to see all commands and notice a make:policy command.
+5. Review it with php artisan help make:policy and see what you need.
+6. We need name and model it corresponse to.
+7. `php artisan make:policy ConversationPolicy --model=Conversation`
+8. It will add new Policies to your app folder.
+9. Since we used command  --model=Conversation flag it wrote a lot of methods you may want.
+10. For most situations you only need one method
+11. Do we have permission to work with this model.
+12. In case of conversation that is what we want.
+13. You can call any method inside policies any name you want.
+14. Remove all methods except update
+```php
+    public function update(User $user, Conversation $conversation)
+    {
+        return $conversation->user->is($user);
+    }
+```
+15. Now we can go to AuthServiceProvider.php and remove the gate.
+```php
+    public function boot()
+    {
+        $this->registerPolicies();
+        // Gate::define('update-conversation', function (User $user, Conversation $conversation) {
+        //     return $conversation->user->is($user);
+        // });
+    }
+```
+16. The method in policies called update so we change it from `update-conversation` to `update`
+```php
+
+class ConversationBestReplyController extends Controller
+{
+    public function store(Reply $reply)
+    {
+        // authorize that the current user has permission to set the best reply 
+        // for the conversation
+        $this->authorize('update', $reply->conversation);
+
+        // then set it 
+        $reply->conversation->best_reply_id = $reply->id;
+        $reply->conversation->save();
+
+        // redirect back to the conversation page
+        return back();
+    }
+}
+
+```
+17. Behind the scene laravel create a maps that connets the Conversation model to the ConversationPolicy
+```php
+        $this->authorize('update', $reply->conversation);
+
+```
+to
+```php
+
+    public function update(User $user, Conversation $conversation)
+    {
+        return $conversation->user->is($user);
+    }
+```
+18. Usually better to use policy classes unless your authorization logic is very trivial otherwise keep it simple and use AuthServiceProvider.php
+19. `$this->authorize('update', $reply->conversation);` $reply->conversation is loaded in cache so we not performing extra database queries
+20. You could extra variable for all of them.
+```php
+
+    public function store(Reply $reply)
+    {
+        // authorize that the current user has permission to set the best reply 
+        // for the conversation
+        $coversation = $reply->conversation;
+
+        $this->authorize('update', $coversation);
+
+        // then set it 
+        $coversation->best_reply_id = $reply->id;
+        $coversation->save();
+
+        // redirect back to the conversation page
+        return back();
+    }
+```
+21. Other option create wrapper for what that logic repressents.
+22. In this case that logic is setting best answer
+23. Lets go to Conversation model and setBestReply()
+24. Now I can perform this logic directly on my model
+25. Rather than the Controller
+```php
+class Conversation extends Model
+{
+    public function setBestReply(Reply $reply)
+    {
+        $this->best_reply_id = $reply->id;
+        $this->save();
+    }
+
+```
+26. Now in controller
+```php
+class ConversationBestReplyController extends Controller
+{
+    public function store(Reply $reply)
+    {
+        // authorize that the current user has permission to set the best reply 
+        // for the conversation
+        $this->authorize('update-conversation', $reply->conversation);
+
+        // then set it 
+        // $reply->conversation->best_reply_id = $reply->id;
+        // $reply->conversation->save();
+        $reply->conversation->setBestReply($reply);
+
+        // redirect back to the conversation page
+        return back();
+    }
+}
+```
+27. Now change the @can in replies.blade to update
+```php
+
+        @can ('update', $conversation)
+            <form method="POST" action="/best-replies/{{ $reply->id }}">
+                @csrf
+                <button type="submit" class="btn p-0 text-muted">Best Reply?</button>
+            </form>
+        @endcan
+```
+28. Now lets display a label to mark best reply.
+```php
+        <header style="display: flex; justify-content: space-between;">
+            <p class="m-0"><strong>{{$reply->user->name}} said...</strong></p>
+            {{ $conversation->best_reply }}
+
+            @if ($conversation->best_reply_id == $reply->id)
+                <span style="color: green;">Best Reply!!!</span>
+            @endif
+        </header>
+```
+29. For logic you would use in multiple places then it may be good to add it to model as well.
+```php
+class Reply extends Model
+{
+    public function isBest()
+    {
+        // returns a boolean
+        return $this->id === $this->conversation->best_reply_id;
+    }
+
+```
+30. It also makes it more readeable
+31. Often you will find you will move logic that you use a lot to the Model
+32. Only show label if reply is best.
+```php
+        <header style="display: flex; justify-content: space-between;">
+            <p class="m-0"><strong>{{$reply->user->name}} said...</strong></p>
+            {{ $conversation->best_reply }}
+
+            @if ($reply->isBest())
+                <span style="color: green;">Best Reply!!!</span>
+            @endif
+        </header>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
