@@ -5179,15 +5179,108 @@ class ConversationPolicy
 20. Now test it, if user id is the one you wrote it will instanly retrn true allowing you to choose best reply in any thread.
 
 
+### Guessing the Ability Name
+1. Here is an optional feature you might consider
+2. Notice when you authorize ability
+```php
+class ConversationBestReplyController extends Controller
+{
+    public function store(Reply $reply)
+    {
+        $this->authorize('update', $reply->conversation);
+```
+3. We provide ability name('update') and associated model ($reply->conversation).
+4. Now if you take look under the hood by clicking on authorize()
+5. `vendor/laravel/framework/src/Illuminate/Foundation/Auth/Access/AuthorizesRequests.php`
+```php
+    public function authorize($ability, $arguments = [])
+    {
+        [$ability, $arguments] = $this->parseAbilityAndArguments($ability, $arguments);
 
+        return app(Gate::class)->authorize($ability, $arguments);
+    }
+```
+6. Laravel parse the ability `this->parseAbilityAndArguments($ability, $arguments);`
+7. click on parse parseAbilityAndArguments
+```php
+    protected function parseAbilityAndArguments($ability, $arguments)
+    {
+        if (is_string($ability) && strpos($ability, '\\') === false) {
+            return [$ability, $arguments];
+        }
+        // If you did, it leads the controller actions method name and tries tries to get ability based on that.
+        $method = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'];
 
+        return [$this->normalizeGuessedAbilityName($method), $ability];
+    }
+```
+8. If I were to remove the name
+```php
+class ConversationBestReplyController extends Controller
+{
+    public function store(Reply $reply)
+    {
+        $this->authorize($reply->conversation);
+```
+9. Laravel will try to figure out which policy method it should call.
+10.  debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'];
+11.  What is doing is reading the ConversationBestReplyController method alone will return the store(
+12.  Then normalize normalizeGuessedAbilityName by reading resourceAbilityMap(
+```php
+    protected function normalizeGuessedAbilityName($ability)
+    {
+        $map = $this->resourceAbilityMap();
 
-
-
-
-
-
-
+        return $map[$ability] ?? $ability;
+    }
+```
+13. Is maping between the controller Action ('index') and associated Policy 'viewAny' name
+14. This is following conventions.
+```php
+    protected function resourceAbilityMap()
+    {
+        return [
+            'index' => 'viewAny',
+            'show' => 'view',
+            'create' => 'create',
+            'store' => 'create',
+            'edit' => 'update',
+            'update' => 'update',
+            'destroy' => 'delete',
+        ];
+    }
+```
+15. In our case we are effectely authorizing when ever we can create new reply.
+16. Since we using store method it will not work since we have 'store' => 'update', instead of 'store' => 'create',
+17. So they need to match to work.
+18. If we try this it will not work.
+```php
+class ConversationBestReplyController extends Controller
+{
+    public function store(Reply $reply)
+    {
+        $this->authorize($reply->conversation);
+```
+19. Now if you change it to create is going to work.
+```php
+    public function create(User $user, Conversation $conversation)
+    {
+        return $conversation->user->is($user);
+    }
+```
+20. As well change it on the replies.php
+```php
+        @can ('create', $conversation)
+            <form method="POST" action="/best-replies/{{ $reply->id }}">
+                @csrf
+                <button type="submit" class="btn p-0 text-muted">Best Reply?</button>
+            </form>
+        @endcan
+```
+21. Entirely option if you reach for this.
+22. Is a choice of looking simple or being explicit about abilty name you calling.
+23. Yet in most cases better to be explicit
+24. So we will stay with update action
 
 
 

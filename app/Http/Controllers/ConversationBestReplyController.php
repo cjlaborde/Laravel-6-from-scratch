@@ -12,6 +12,7 @@ class ConversationBestReplyController extends Controller
         // authorize that the current user has permission to set the best reply 
         // for the conversation
         $this->authorize('update', $reply->conversation);
+        // $this->authorize($reply->conversation);
 
         // then set it 
         // $reply->conversation->best_reply_id = $reply->id;
