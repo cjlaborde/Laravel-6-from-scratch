@@ -5343,34 +5343,596 @@ Route::get('conversations/{conversation}', 'ConversationsController@show')->midd
 
 6. It comes down to your preference if you want authorization to be performed in the controller or the route.
 
+### Roles and Abilities
+#### Example what we going to do.
+1. You have users in your system
+2. and each of those users plays a different role
+3. Example John => moderator plays role of moderator.
+   1. Allowed to moderate the forum and that alow
+4. Jane => manager 
+   1. She can moderate the forum
+   2. Can also publish content 
+   3. view treads
+5. Joe => Owner
+   1. Can do everything
+   2. Can also view finalcial reports, which no other role can play.
+6. Now we have these roles defined now each of these roles include certain abilities
+7. moderator => 'edit_forum'
+8. owner => 'view_financial_reports'
+9. If you worked with wordpress before this can be very familiar with you.
+10. So users play roles and each of those roles comes with certain abilities.
 
+#### build Roles
+1. `php artisan make:migration create_roles_tables --table=roles`
+2. remove down() method
+```php
+    public function down()
+    {
 
+    }
+ ```
+ 3. then create all the required tables
+```php
+    public function up()
+    {
+        Schema::table('roles', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            // name of the role
+            $table->string('name');
+            // there situations where name of the role is different to label 
+            // what you want to display to user
+            // If you don't include label we Capitalize the name and be ready to go.
+            $table->string('label')->nullable();
+            $table->timestamps();
+        });
+        // roles includes certain abilities so lets do that as well
+        Schema::table('abilities', function (Blueprint $table) {
+            // combination of role_id and ability_id and they most be unique
+            // otherwise you can do a typical primary key and set role_id and ability_id to unique
+            $table->primary(['role_id', 'ability_id']);
+            $table->bigIncrements('id');
+            $table->string('name'); // edit_form
+            $table->string('label')->nullable(); // Edit the Form
+            $table->timestamps();
+        });
+        // We have many to many relationship here so we need a table to store the connection between a role and an ability
+        // The naming convention that laravel uses for  many to many tables is singular in alphabetic order
+        Schema::table('ability_role', function (Blueprint $table) {
+            $table->unsignedBigInteger('role_id');
+            $table->unsignedBigInteger('ability_id');
+            $table->timestamps();
 
+            // if you delete a role, it will cascade and delete all record containing that role
+            $table->foreign('role_id')
+                ->references('id')
+                ->on('roles')
+                ->onDelete('cascade');
 
+            $table->foreign('ability_id')
+                ->references('id')
+                ->on('abilities')
+                ->onDelete('cascade');
+        });
 
+        // We need table to store user_id and the role_id associated with them to store all toles user has
+        Schema::table('role_user', function (Blueprint $table) {
+            $table->primary(['user_id', 'role_id']);
 
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('role_id');
+            $table->timestamps();
 
+            // if you delete a role, it will cascade and delete all record containing that role
+            $table->foreign('user_id')
+            ->references('id')
+            ->on('users')
+            ->onDelete('cascade');
 
+            $table->foreign('role_id')
+                ->references('id')
+                ->on('roles')
+                ->onDelete('cascade');
+        });
+    }
+ ```
+ 4. php artisan migrate
+ 5. It fails Because it all of these we are creating new tables
+ 6. Replace ::tables with ::create
+```php
+    public function up()
+    {
+        Schema::create('roles', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            // name of the role
+            $table->string('name');
+            // there situations where name of the role is different to label 
+            // what you want to display to user
+            // If you don't include label we Capitalize the name and be ready to go.
+            $table->string('label')->nullable();
+            $table->timestamps();
+        });
+        // roles includes certain abilities so lets do that as well
+        Schema::create('abilities', function (Blueprint $table) {
+    
+            $table->bigIncrements('id');
+            $table->string('name'); // edit_form
+            $table->string('label')->nullable(); // Edit the Form
+            $table->timestamps();
+        });
+        // We have many to many relationship here so we need a table to store the connection between a role and an ability
+        // The naming convention that laravel uses for  many to many tables is singular in alphabetic order
+        Schema::create('ability_role', function (Blueprint $table) {
+            // combination of role_id and ability_id and they most be unique
+            // otherwise you can do a typical primary key and set role_id and ability_id to unique
+            $table->primary(['role_id', 'ability_id']);
 
+            $table->unsignedBigInteger('role_id');
+            $table->unsignedBigInteger('ability_id');
+            $table->timestamps();
 
+            // if you delete a role, it will cascade and delete all record containing that role
+            $table->foreign('role_id')
+                ->references('id')
+                ->on('roles')
+                ->onDelete('cascade');
 
+            $table->foreign('ability_id')
+                ->references('id')
+                ->on('abilities')
+                ->onDelete('cascade');
+        });
 
+        // We need table to store user_id and the role_id associated with them to store all toles user has
+        Schema::create('role_user', function (Blueprint $table) {
+            $table->primary(['user_id', 'role_id']);
 
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('role_id');
+            $table->timestamps();
 
+            // if you delete a role, it will cascade and delete all record containing that role
+            $table->foreign('user_id')
+            ->references('id')
+            ->on('users')
+            ->onDelete('cascade');
 
+            $table->foreign('role_id')
+                ->references('id')
+                ->on('roles')
+                ->onDelete('cascade');
+        });
+    }
+```
+7. Lets create the Models
+8. `php artisan make:model Role`
+9. `php artisan make:model Ability`
+10. Go to Role.php model
+```php
+class Role extends Model
+{
+    public function abilities()
+    {
+        return $this->belongsToMany(Ability::class);
+    }
+}
 
+// $moderator->abilities
+```
+11.  Do the inverse in Ability.php model
+12.  If you an ability and you want to grab all roles that include that ability that too will be a belongsToMany relationship
+```php
+class Ability extends Model
+{
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+}
+```
+13. Then go to User.php model
+14. lets say you have $user->roles and you want to grab all roles assigned to him.
+```php
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+```
+15. Would be useful if  I can assign a role to an user.
+16. // $user->roles()->save($role);
+17. We can also give it a name like $user->assignRole();
+```php
+    public function assignRole($role)
+    {
+        $this->roles()->save($role);
+    }
+```
+18. Each role has certain abilities
+19. If we have role and we want to add new ability
+20. go to Role.php Model
+```php
+class Role extends Model
+{
+    public function allowTo($ability)
+    {
+        $this->abilities()->save($ability);
+    }
+}
+```
+21. Now roles have abilities and can allow new abilities.
+22. Since we have timestap declared in our migration we need to implicit apply those.
+```php
+class Ability extends Model
+{
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class)->withTimestamps();
+    }
+```
+```php
+class Role extends Model
+{
+    public function abilities()
+    {
+        return $this->belongsToMany(Ability::class)->withTimestamps();
+    }
+}
+```
+```php
+class User extends Authenticatable
+{
+    use Notifiable;
 
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class)->withTimestamps();
+    }
+```
+23. php artisan tinker
+24. declare user
+```php
+=> App\User {#3073
+     id: 2,
+     name: "John",
+     email: "john@gmail.com",
+     email_verified_at: null,
+     created_at: "2020-01-20 01:01:32",
+     updated_at: "2020-01-20 04:11:50",
+   }
+>>> $user = User::find(2)
+```
+25. $user->roles;
+23. You can create role with
+```php
+Role::firstOrCreate(['name' -> 'moderator']);
+```
+24. Not going to work so go to Role.php & Ability.php Models and add
+```php
+protected $guarded = [];
+```
+25. Now use Tinker again to create new role
+```php
+>>> Role::firstOrCreate(['name' => 'moderator']);
+PHP Fatal error:  Class 'Role' not found in Psy Shell code on line 1
+```
+26. To fix this `composer dump-autoload`
+27. now use in tinker `$role = Role::firstOrCreate(['name' => 'moderator']);`
+```php
+=> App\Role {#3062
+     name: "moderator",
+     updated_at: "2020-08-14 06:14:46",
+     created_at: "2020-08-14 06:14:46",
+     id: 1,
+   }
+```
+27. Now that we have Role lets setup a new ability
+```php
+>>> $ability = Ability::firstOrCreate(['name' => 'edit_forum']);
+[!] Aliasing 'Ability' to 'App\Ability' for this Tinker session.
+=> App\Ability {#3068
+     name: "edit_forum",
+     updated_at: "2020-08-14 06:19:51",
+     created_at: "2020-08-14 06:19:51",
+     id: 1,
+   }
+```
+28. Now check them in your database the roles and abilty
+29. Yet you will also find the connection between role and ability have not yet been defined.
+30. Remember that you created method in Role model called AllowTo($ability)
+```php
+$user = User::find(2)
 
+$moderator = Role::firstOrCreate([
+    'name' => 'edit_forum'
+])
 
+$moderator->allowTo($editForum);
+```
+31. Now check that you have ability_role filed in database
+32. Now lets assign a role to a given user.
+```php
+$user = User::find(2);
 
+$moderator = Role::firstOrCreate([
+    'name' => 'moderator'
+]);
 
+$user->assignRole($moderator);
+```
+33. Now you can see connection role_user
+```php
+>>> $user->roles
+=> Illuminate\Database\Eloquent\Collection {#3061
+     all: [
+       App\Role {#3063
+         id: 1,
+         name: "moderator",
+         label: null,
+         created_at: "2020-08-14 06:14:46",
+         updated_at: "2020-08-14 06:14:46",
+         pivot: Illuminate\Database\Eloquent\Relations\Pivot {#3085
+           user_id: 2,
+           role_id: 1,
+           created_at: "2020-08-14 07:55:45",
+           updated_at: "2020-08-14 07:55:45",
+         },
+       },
+     ],
+   }
+```
+34. Next if we want to find all abilities from that role.
+```php
+>>> $user->roles[0]->abilities;
+=> Illuminate\Database\Eloquent\Collection {#3069
+     all: [
+       App\Ability {#3080
+         id: 1,
+         name: "edit_forum",
+         label: null,
+         created_at: "2020-08-14 06:19:51",
+         updated_at: "2020-08-14 06:19:51",
+         pivot: Illuminate\Database\Eloquent\Relations\Pivot {#3092
+           role_id: 1,
+           ability_id: 1,
+           created_at: "2020-08-14 06:30:20",
+           updated_at: "2020-08-14 06:30:20",
+         },
+       },
+     ],
+   }
+>>> 
+```
+35. Lets say we want to do something like this `$user->abilities();` give all abilities of the other.
+36. That can be collection or array of abilities.
+37. How can we grab abilities.
+38. $user->roles give us collection of roles
+39. Remember there is no direct link between ability and user.
+40. $user->roles->map->abilities; map through each role and return abilities associated with that role.
+41. This syntax is higher order collection
+42. This will basically call map on a collection and for each one call the ability method on the role instance there
+43. Then it will return a new collection.
+44. Now we have collection of collections by using $user->roles->map->abilities;
+```php
+>>> $user->roles->map->abilities;
+=> Illuminate\Support\Collection {#3082
+     all: [
+       Illuminate\Database\Eloquent\Collection {#3069
+         all: [
+           App\Ability {#3080
+             id: 1,
+             name: "edit_forum",
+             label: null,
+             created_at: "2020-08-14 06:19:51",
+             updated_at: "2020-08-14 06:19:51",
+             pivot: Illuminate\Database\Eloquent\Relations\Pivot {#3092
+               role_id: 1,
+               ability_id: 1,
+               created_at: "2020-08-14 06:30:20",
+               updated_at: "2020-08-14 06:30:20",
+             },
+           },
+         ],
+       },
+     ],
+   }
+```
+45. It looks messy so lets flatten it down to a single collection.
+46. $user->roles->map->abilities->flatten()
+```php
+>>> $user->roles->map->abilities->flatten()
+=> Illuminate\Support\Collection {#3090
+     all: [
+       App\Ability {#3080
+         id: 1,
+         name: "edit_forum",
+         label: null,
+         created_at: "2020-08-14 06:19:51",
+         updated_at: "2020-08-14 06:19:51",
+         pivot: Illuminate\Database\Eloquent\Relations\Pivot {#3092
+           role_id: 1,
+           ability_id: 1,
+           created_at: "2020-08-14 06:30:20",
+           updated_at: "2020-08-14 06:30:20",
+         },
+       },
+     ],
+   }
+```
+47. I don't need full ability instance so I pluck the name.
+48. `$user->roles->map->abilities->flatten()->pluck('name');`
+```php
+=> Illuminate\Support\Collection {#3093
+     all: [
+       "edit_forum",
+     ],
+   }
+>>> 
+```
+49. Just to be safe only grab the unique ones.
+50. $user->roles->map->abilities->flatten()->pluck('name')->unique()
+51. Go to User Model to grab all abilities we create method.
+52. this is not an eloquent relationship so we have to call it using $this-> instead of $user
+```php
+    public function abilities()
+    {
+        return $this->roles->map->abilities->flatten()->pluck('name')->unique();        
+    }
+```
+53. in tinker use $user->abilities()
+```php
+>>> $user->abilities()
+=> Illuminate\Support\Collection {#3060
+     all: [
+       "edit_forum",
+     ],
+   }
+```
+54. You should only see link if you have permission to edit the form
+55. Also we want to use @can so make sure we hook these abilities in the gate functionality
+```php
+    @can ('edit_forum')<li class="{{ Request::is('forum') ? 'current_page_item' : '' }}"><a href="/forum">Edit Forum</a></li>@endcan
 
+```
+56. Then go to AuthServiceProvider.php boot() method
+57. Lets set a global Gate before the filter
+```php
 
+Gate::before(function ($user, $ability) {
+     // we have array of all their abilities so lets read that array to see if it contains that ability
+    if ($user->abilities()->contains($ability)) {
+        return true;   
+    }
+});
+```
+58. Works worrectly because, I have assigned the role of moderator
+59. Remove role from database
+60. now you can't see Edit form till you add it again to the database.
+61. There is issue if you run again assignRole will show error
+```php
+>>> $user->assignRole($moderator);
+Illuminate/Database/QueryException with message 'SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '2-1' for key 'PRIMARY' (SQL: insert into `role_user` (`created_at`, `role_id`, `updated_at`, `user_id`) values (2020-08-14 09:54:11, 1, 2020-08-14 09:54:11, 2))'
+```
+62. That is because is trying to assign the role 2 times.
+63. We can fix this by going to User.php Model
+64. Then see the assignRole() method that if there is a role assigned to the user don't do anything.
+```php
+    public function assignRole($role)
+    {
+        // $this->roles()->save($role);
+        // What it will do is basically replace all existing methods in the pivot method with this collection
+        // any that are not included in collection but included in database will be drop
+        // yet we don't want to drop anything so set it to false.
+        $this->roles()->sync($role, false);
+    }
 
+```
+65.  Click on sync /laravel6/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Relations/Concerns/InteractsWithPivotTable.php
+```php
+    public function sync($ids, $detaching = true)
+    {
+```
+66. this is why we set sync to false above in assignRole()
+67. If it set to false it will add new method if neccessary but will not drop 
+68. Now if we run it again even if we have record it will not fail
+```php
+ $user->assignRole($moderator);
+```
+69. Now lets create new role called management
+```php
+$user = User::find(2);
 
+$manager = Role::firstOrCreate([
+    'name' =>'manager'
+]);
 
+$viewReports = Ability::firstOrCreate([
+    'name' => 'view_reports'
+]);
 
+$manager->allowTo($viewReports);
 
+```
+70. ^ now paste this inside Tinker to create new role with ability
 
+71. Now check we have another role manager with an abilities
+72. Now lets add another link
+73. If you try to  allowTo again you going to encounter same error as before.
+```php
 
+>>> $manager->allowTo($viewReports);
+Illuminate/Database/QueryException with message 'SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '2-2' for key 'PRIMARY' (SQL: insert into `ability_role` (`ability_id`, `created_at`, `role_id`, `updated_at`) values (2, 2020-08-14 10:23:10, 2, 2020-08-14 10:23:10))'
+>>> 
+```
+74. To fix it switch it to sync as well
+```php
+
+class Role extends Model
+{
+    protected $guarded = [];
+    
+    public function allowTo($ability)
+    {
+        // $this->abilities()->save($ability);
+        $this->abilities()->sync($ability, false);
+    }
+}
+```
+75. Now lets create quick routes in web.php
+```php
+Route::get('/reports', function () {
+    return 'the secret reports';
+});
+
+Route::get('/forum', function () {
+    return 'the cool people forum';
+});
+```
+76. Now everyone can see reports page
+77. So add middleware to only allow users that have ability to see roles.
+```php
+Route::get('/reports', function () {
+    return 'the secret reports';
+})->middleware('can:view_reports');
+```
+78. Now works correctly and only users with view_reports ability can access it or admin
+79. in tinker use
+```php
+$user = User::find(2);
+
+$user->assignRole('manager');
+```
+80. It will not work and give error
+81. To fix it go to User.php Model and in assignRole
+82. If what you gave us is string then lets track down role.
+```php
+    public function assignRole($role)
+    {
+        if (is_string($role)) {
+       $role = Role::whereName($role)->firstOrFail();
+        }
+```
+83. Now try again
+```php
+$user = User::find(2);
+
+$user->assignRole('manager');
+
+```
+84. Now works correctly
+85. Now John with user id 2 has both role of Moderator and Manager
+86. Now lastly lets to the Role.php model
+87. So if you have a $role->allowTo('edit_form') We can accept object or string.
+```php
+class Role extends Model
+{
+    public function allowTo($ability)
+    {
+        if (is_string($ability)) {
+            $ability = Ability::whereName($ability)->firstOrFail();
+         }
+        // $this->abilities()->save($ability);
+        $this->abilities()->sync($ability, false);
+    }
+}
+```
+88. The secret here is create usabilities then we Hook them into laravel Gate functionality using global before hook
 

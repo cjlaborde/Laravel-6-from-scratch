@@ -61,4 +61,27 @@ class User extends Authenticatable
     {
         return $this->hasMany(Reply::class);
     }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class)->withTimestamps();
+    }
+
+    public function assignRole($role)
+    {
+        if (is_string($role)) {
+           $role = Role::whereName($role)->firstOrFail();
+        }
+        // $this->roles()->save($role);
+        // What it will do is basically replace all existing methods in the pivot method with this collection
+        // any that are not included in collection but included in database will be drop
+        // yet we don't want to drop anything so set it to false.
+        $this->roles()->sync($role, false);
+    }
+
+    public function abilities()
+    {
+        return $this->roles->map->abilities->flatten()->pluck('name')->unique();        
+    }
 }
+

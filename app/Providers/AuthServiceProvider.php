@@ -34,5 +34,13 @@ class AuthServiceProvider extends ServiceProvider
                 return true;
             }
          });
+    
+
+         Gate::before(function ($user, $ability) {
+             // we have array of all their abilities so lets read that array to see if it contains that ability
+            if ($user->abilities()->contains($ability)) {
+                return true;   
+            }
+        });
     }
 }

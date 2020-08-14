@@ -1,5 +1,6 @@
 <?php
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -17,6 +18,8 @@
 //Route::get('/', function () {
 //    return view('welcome');
 //});
+
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', 'PagesController@home');
 Route::get('/cache', 'PagesController@cache');
@@ -155,3 +158,16 @@ Route::post('best-replies/{reply}', 'ConversationBestReplyController@store');
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home')->middleware('auth');
+
+
+# lesson 54
+Route::get('/reports', function () {
+    return 'the secret reports';
+})->middleware('can:view_reports');
+
+Route::get('/forum', function () {
+    return 'the cool people forum';
+});
+
+
+

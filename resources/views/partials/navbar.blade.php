@@ -63,6 +63,8 @@
                 <li class="{{ Request::is('about') ? 'current_page_item' : '' }}"><a href="/about" accesskey="3" title="">About Us</a></li>
                 <li class="{{ Request::is('articles*') ? 'current_page_item' : '' }}"><a href="/articles" accesskey="4" title="">Articles</a></li>
                 <li class="{{ Request::is('contact') ? 'current_page_item' : '' }}"><a href="/contact" accesskey="5" title="">Contact Us</a></li>
+                @can ('edit_forum')<li class="{{ Request::is('forum') ? 'current_page_item' : '' }}"><a href="/forum">Edit Forum</a></li>@endcan
+                @can ('view_reports')<li class="{{ Request::is('reports') ? 'current_page_item' : '' }}"><a href="/reports">View Reports</a></li>@endcan
             </ul>
         </div>
     </div>
