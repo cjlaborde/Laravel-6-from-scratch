@@ -5282,20 +5282,66 @@ class ConversationBestReplyController extends Controller
 23. Yet in most cases better to be explicit
 24. So we will stay with update action
 
+### Middleware-Based Authorization
+1. In adition to authorize in controller level, we can also authorize in routing level as a middleware.
+2. For example you can only view conversation if you created it.
+3. For example lets say you can only view a conversation only if you created.
+4. Would make sense for a draft
+5. We can do it on the controller level ConversationsController.php
+6. Before we show a Conversation we authorize that you can do it.
+7. We can do it like this `$this->authorize('view', $conversation);`
+8. Or you can remove it `$this->authorize($conversation);`
+```php
 
+    public function show(Conversation $conversation) {
+        $this->authorize('view', $conversation);
+        
+        return view('conversations.show', [
+            'conversation' => $conversation
+        ]);
+    }
+```
+9. At the moment we don't have this ability defined.
+10. Which means if I refresh it default to false. Unauthorized
+11. Lets switch to our policy ConversationPolicy.php
+12. Then crease method for view, is basically same as update.
+```php
+class ConversationPolicy
+{
+    use HandlesAuthorization;
 
+    public function view(User $user, Conversation $conversation)
+    {
+        return $conversation->user->is($user);
+    }
 
+```
+13. Now you can only visit the page if you created or are an admin.
+14. Otherwise you get error message 403 This action is unauthorized.
 
+#### Now we will do the authorization from a middleware
+1. First remove authorization from controller
+```php
+    public function show(Conversation $conversation) {
+        // $this->authorize('view', $conversation);
+        
+        return view('conversations.show', [
+            'conversation' => $conversation
+        ]);
+    }
+```
+2. Now everyone can access this conversation.
+3. now go to routes file web.php
+4. The identifier is can just like your @can blade directives. Then we want ability name and call it view then finally wild card which is {conversation}.
+5. Is going to level our model bidding.
+6. It will grab the {conversation} which would be number and will automatically pull in conversation with that number id.
+```php
+Route::get('conversations/{conversation}', 'ConversationsController@show');
+Route::get('conversations/{conversation}', 'ConversationsController@show')->middleware('can:view,conversation');
+```
+5. Work correctly again if you are logged it and not if you are logged out you get 403 This action is unauthorized.
 
-
-
-
-
-
-
-
-
-
+6. It comes down to your preference if you want authorization to be performed in the controller or the route.
 
 
 

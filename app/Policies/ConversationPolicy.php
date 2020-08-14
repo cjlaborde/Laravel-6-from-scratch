@@ -10,6 +10,12 @@ class ConversationPolicy
 {
     use HandlesAuthorization;
 
+    public function view(User $user, Conversation $conversation)
+    {
+        return $conversation->user->is($user);
+    }
+
+
     // public function before(User $user)
     // {
     //     if ($user->id === 3) {
